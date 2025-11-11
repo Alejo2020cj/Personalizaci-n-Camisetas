@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>¡Diseña tu estilo!</title>
+<style>
+  :root{
+    --neon1: #ff00cc;
+    --neon2: #00e5ff;
+    --bg: #04040a;
+  }
+  html,body{height:100%;margin:0;background:radial-gradient(circle at top left,var(--bg),#0b0b12);font-family:'Orbitron',sans-serif;color:#fff;}
+  header{ text-align:center;padding:18px;background:linear-gradient(90deg,var(--neon1),#2b2bff);box-shadow:0 0 30px rgba(255,0,204,0.15); font-size:1.4rem; }
+  .wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; }
+  .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; }
+  input[type=file]{ background:#0b0b0f; color:var(--neon2); border:1px solid rgba(0,229,255,0.08); padding:8px; border-radius:8px; }
+  button{ background:linear-gradient(90deg,var(--neon1),var(--neon2)); border:none; padding:10px 14px; border-radius:10px; color:#000; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,0.4); cursor:pointer; }
+  .canvas-area{ width:min(760px,95vw); height:auto; display:flex; justify-content:center; align-items:center; padding:10px; }
+  canvas{ width:100%; height:auto; max-height:78vh; background:#0a0a0a; border-radius:10px; box-shadow:0 0 40px rgba(0,229,255,0.06); border:2px solid rgba(0,229,255,0.12); touch-action:none; }
+  .hint{ color:#cfd8ff88; font-size:0.9rem; margin-top:6px; text-align:center; }
+</style>
+</head>
+<body>
+<header>👕 ¡Diseña tu estilo!</header>
+<div class="wrap">
+  <div class="controls">
+    <label>Camiseta: <input id="mockupInput" type="file" accept="image/*"></label>
+    <label>Diseño: <input id="artInput" type="file" accept="image/*"></label>
+    <button id="downloadBtn">⬇️ Descargar PNG</button>
+    <button id="resetBtn">↺ Reiniciar</button>
+  </div>
+  <div class="canvas-area"><canvas id="canvas"></canvas></div>
+  <div class="hint">Toca o haz clic y arrastra para mover. Arrastra cualquier borde o esquina para redimensionar.</div>
+</div>
+
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const mockupInput = document.getElementById('mockupInput');
+const artInput = document.getElementById('artInput');
+const downloadBtn = document.getElementById('downloadBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+let mockupImg=null, artImg=null;
+let art={x:100,y:100,w:200,h:200};
+let pointerDown=false, activePointerId=null;
+let dragging=false, resizing=false, selected=false;
+let dragOffset={x:0,y:0};
+let resizeDir=null;
+const HANDLE_MARGIN=20, MIN_SIZE=30;
+
+function setCanvasSizeToImage(img){
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=img.width*dpr;
+  canvas.height=img.height*dpr;
+  canvas.style.width=Math.min(img.width,window.innerWidth-40)+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(mockupImg) ctx.drawImage(mockupImg,0,0,canvas.width/(window.devicePixelRatio||1),canvas.height/(window.devicePixelRatio||1));
+  if(artImg) ctx.drawImage(artImg,art.x,art.y,art.w,art.h);
+  if(selected && artImg){
+    ctx.strokeStyle='#00ffff'; ctx.lineWidth=2; ctx.strokeRect(art.x,art.y,art.w,art.h);
+  }
+}
+function getPointerPos(e){
+  const rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  return {
+    x:(e.clientX-rect.left)*(canvas.width/rect.width)/dpr,
+    y:(e.clientY-rect.top)*(canvas.height/rect.height)/dpr
+  };
+}
+function getResizeDirection(pos){
+  const nearLeft = Math.abs(pos.x - art.x) < HANDLE_MARGIN;
+  const nearRight = Math.abs(pos.x - (art.x + art.w)) < HANDLE_MARGIN;
+  const nearTop = Math.abs(pos.y - art.y) < HANDLE_MARGIN;
+  const nearBottom = Math.abs(pos.y - (art.y + art.h)) < HANDLE_MARGIN;
+
+  if (nearTop && nearLeft) return "nw";
+  if (nearTop && nearRight) return "ne";
+  if (nearBottom && nearLeft) return "sw";
+  if (nearBottom && nearRight) return "se";
+  if (nearTop) return "n";
+  if (nearBottom) return "s";
+  if (nearLeft) return "w";
+  if (nearRight) return "e";
+  return null;
+}
+function isInsideArt(pos){
+  return pos.x>=art.x && pos.x<=art.x+art.w && pos.y>=art.y && pos.y<=art.y+art.h;
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if(activePointerId && activePointerId!==e.pointerId)return;
+  activePointerId=e.pointerId;
+  canvas.setPointerCapture(activePointerId);
+  pointerDown=true;
+  const pos=getPointerPos(e);
+  const dir=getResizeDirection(pos);
+  if(artImg && dir){
+    resizing=true; resizeDir=dir; selected=true;
+  }else if(artImg && isInsideArt(pos)){
+    dragging=true; selected=true;
+    dragOffset={x:pos.x-art.x,y:pos.y-art.y};
+  }else selected=false;
+  draw();
+});
+
+canvas.addEventListener('pointermove',e=>{
+  const pos=getPointerPos(e);
+  const dir=getResizeDirection(pos);
+  if(dir) canvas.style.cursor=dir+"-resize";
+  else if(artImg && isInsideArt(pos)) canvas.style.cursor="move";
+  else canvas.style.cursor="default";
+
+  if(!pointerDown||activePointerId!==e.pointerId)return;
+  e.preventDefault();
+
+  if(dragging){
+    art.x=pos.x-dragOffset.x;
+    art.y=pos.y-dragOffset.y;
+  }else if(resizing){
+    let dx=pos.x-art.x, dy=pos.y-art.y;
+    switch(resizeDir){
+      case"n": art.h+=art.y-pos.y; art.y=pos.y; break;
+      case"s": art.h=dy; break;
+      case"w": art.w+=art.x-pos.x; art.x=pos.x; break;
+      case"e": art.w=dx; break;
+      case"nw": art.w+=art.x-pos.x; art.h+=art.y-pos.y; art.x=pos.x; art.y=pos.y; break;
+      case"ne": art.w=dx; art.h+=art.y-pos.y; art.y=pos.y; break;
+      case"sw": art.w+=art.x-pos.x; art.x=pos.x; art.h=dy; break;
+      case"se": art.w=dx; art.h=dy; break;
+    }
+    if(art.w<MIN_SIZE) art.w=MIN_SIZE;
+    if(art.h<MIN_SIZE) art.h=MIN_SIZE;
+  }
+  draw();
+});
+
+function endPointer(e){
+  if(activePointerId!==e.pointerId)return;
+  e.preventDefault();
+  dragging=resizing=false; pointerDown=false; resizeDir=null;
+  try{canvas.releasePointerCapture(activePointerId);}catch{}
+  activePointerId=null; selected=false; draw();
+}
+canvas.addEventListener('pointerup',endPointer);
+canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('pointerout',endPointer);
+
+mockupInput.addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const img=new Image();
+  img.onload=()=>{mockupImg=img; setCanvasSizeToImage(img); draw();};
+  img.src=URL.createObjectURL(file);
+});
+
+artInput.addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const img=new Image();
+  img.onload=()=>{
+    artImg=img;
+    const cw=canvas.width/(window.devicePixelRatio||1), ch=canvas.height/(window.devicePixelRatio||1);
+    art.w=cw*0.4; art.h=art.w*(img.height/img.width);
+    art.x=(cw-art.w)/2; art.y=(ch-art.h)/2; draw();
+  };
+  img.src=URL.createObjectURL(file);
+});
+
+downloadBtn.addEventListener('click',()=>{
+  draw();
+  canvas.toBlob(b=>{
+    if(!b)return; const url=URL.createObjectURL(b);
+    const a=document.createElement('a'); a.href=url; a.download='camiseta_cyberpunk.png';
+    a.click(); URL.revokeObjectURL(url);
+  });
+});
+
+resetBtn.addEventListener('click',()=>{
+  mockupImg=null; artImg=null; art={x:100,y:100,w:200,h:200}; selected=false;
+  ctx.setTransform(1,0,0,1,0,0); canvas.width=800; canvas.height=600; draw();
+});
+draw();
+</script>
+</body>
+</html>
