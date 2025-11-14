@@ -40,6 +40,12 @@
 <body>
   <header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
 
+  <!-- 🔥 NUEVO: Precarga silenciosa para evitar congelamiento en celular -->
+  <div style="opacity:0; height:0; overflow:hidden;">
+      <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
+      <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
+  </div>
+
   <div class="controls">
     <button id="btnEllas">👚 Ellas</button>
     <button id="btnEllos">👕 Ellos</button>
@@ -58,15 +64,10 @@
   <div class="hint">Toca/arrastra para mover. Arrastra cualquier borde o esquina para redimensionar. Compatible PC y móvil.</div>
 
 <script>
-/* ============================
-   CONFIGuración
-   ============================ */
+/* ============================ */
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
-/* ============================
-   DOM
-   ============================ */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -81,9 +82,6 @@ const DPR = window.devicePixelRatio || 1;
 const HANDLE = 20;
 const MIN_SIZE = 30;
 
-/* ============================
-   Estado
-   ============================ */
 let mockupImg = null;
 let artImg = null;
 let art = { x: 100, y: 150, w: 300, h: 300 };
@@ -95,112 +93,27 @@ let resizing = false;
 let resizeDir = null;
 let dragOffset = { x: 0, y: 0 };
 
-/* =====================================================
-   PRECARGA SUTILE: cargamos en background las dos imágenes
-   Esto NO cambia tu UI ni botones; solo evita la decodificación
-   en el momento del click (soluciona congelamiento en móviles).
-   ===================================================== */
-const preloaded = {}; // mapa baseName -> HTMLImageElement
-
-function preloadMockup(baseName) {
-  // si ya precargada, OK
-  if (preloaded[baseName]) return;
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  // usar decoding async para hints
-  img.decoding = "async";
-  img.src = `${baseName}.png`; // intentamos png primero; loadDefaultMockup también probará jpg/jpeg
-  // no forzamos decode aquí (dejamos que browser haga lo que pueda),
-  // pero tener la src ya puesta ayuda mucho en móviles porque empieza la descarga/decodificación.
-  preloaded[baseName] = img;
-}
-
-// precargar al inicio (no rompe nada si archivos no existen)
-preloadMockup(DEFAULT_ELLAS);
-preloadMockup(DEFAULT_ELLOS);
-
-/* =====================================================
-   ⛔ FIX IMPORTANTE: loadDefaultMockup mejorada (usa preloaded si posible)
-   - intenta png/jpg/jpeg
-   - usa decoding="async" y img.decode() + requestAnimationFrame para no bloquear UI
-   - no cambia nombres de variables ni flujo original
-   ===================================================== */
-function loadDefaultMockup(baseName){
-  const exts = ['png','jpg','jpeg'];
-  let i = 0;
-
-  async function tryLoad(){
-    if (i >= exts.length){
-      alert("No se encontró "+baseName+".png/.jpg/.jpeg");
-      return;
-    }
-
-    // Si ya preparamos una imagen con baseName.png y estamos en la primera extensión png,
-    // usar esa referencia si está cargando o cargada.
-    if (i === 0 && preloaded[baseName] && preloaded[baseName].src) {
-      const pre = preloaded[baseName];
-      // si ya cargó completamente, úsala directamente
-      if (pre.complete && pre.naturalWidth) {
-        mockupImg = pre;
-        setCanvasSizeToImage(pre);
-        draw();
-        return;
-      }
-      // si no está completa, intentar esperar su onload + decode para no bloquear
-      try {
-        pre.onload = async () => {
-          try { await pre.decode(); } catch(e){ /* ignore */ }
-          requestAnimationFrame(()=>{
-            mockupImg = pre;
-            setCanvasSizeToImage(pre);
-            draw();
-          });
-        };
-        // si ya empezó, no hacer nada más; onload lo manejará
-        return;
-      } catch(err){
-        // en caso de fallo, caemos en el flujo normal
-      }
-    }
-
-    // flujo normal: crear nuevo Image y probar extensiones
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.decoding = "async";
-    img.onload = async () => {
-      try { await img.decode(); } catch(e){ /* si falla decode seguimos */ }
-      requestAnimationFrame(()=>{
-        mockupImg = img;
-        setCanvasSizeToImage(img);
-        draw();
-      });
-    };
-    img.onerror = () => { i++; tryLoad(); };
-    img.src = `${baseName}.${exts[i]}`;
-  }
-
-  tryLoad();
-}
-
-/* =====================================================
-   El resto del código se mantiene exactamente igual
-   (no modifiqué lógica de eventos, dibujo ni comportamiento)
-   ===================================================== */
-
 function setCanvasSizeToImage(img){
   const dpr = DPR;
   canvas.width = img.width * dpr;
   canvas.height = img.height * dpr;
-  canvas.style.width = Math.min(img.width, window.innerWidth - 40) + 'px';
+
+  canvas.style.setProperty(
+    "width",
+    Math.min(img.width, window.innerWidth - 40) + "px",
+    "important"
+  );
+
+  canvas.style.height = "auto";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function draw(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (mockupImg) {
+  if (mockupImg)
     ctx.drawImage(mockupImg, 0, 0, canvas.width / DPR, canvas.height / DPR);
-  } else {
+  else {
     ctx.fillStyle = '#0b0b0b';
     ctx.fillRect(0, 0, canvas.width / DPR, canvas.height / DPR);
   }
@@ -316,7 +229,36 @@ canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('pointerout', endPointer);
 
-/* ============================ */
+/* =====================================================
+   🚀 FIX FINAL PARA CELULAR — Mockup cargado en memoria
+   ===================================================== */
+function loadDefaultMockup(baseName) {
+
+    const preloadImg = document.getElementById(
+        baseName === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos"
+    );
+
+    if (!preloadImg) {
+        alert("No existe el mockup precargado");
+        return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+        mockupImg = img;
+        setCanvasSizeToImage(img);
+        draw();
+    };
+
+    img.onerror = () => {
+        alert("No se pudo cargar el mockup");
+    };
+
+    img.src = preloadImg.src;
+}
+
 btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
 btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
 
@@ -380,7 +322,7 @@ downloadBtn.addEventListener('click', async () => {
   }
 });
 
-resetBtn.addEventListener('click', ()=>{ 
+resetBtn.addEventListener('click', ()=>{
   mockupImg = null; artImg = null;
   art = { x:100, y:150, w:300, h:300 };
   canvas.width = 800 * DPR;
