@@ -29,6 +29,14 @@
   input[type="file"]{ display:none; }
   .file-label{ display:inline-block; }
   .canvas-wrap{ width:100%; max-width:900px; display:flex; justify-content:center; align-items:center; }
+
+  /* NUEVA CLASE QUE SOLUCIONA EL PROBLEMA EN MÓVIL */
+  .canvas-fixed-size {
+    width: 100% !important;
+    max-width: 900px !important;
+    height: auto !important;
+  }
+
   canvas{
     width:100%; height:auto; max-height:78vh; border-radius:12px;
     border:2px solid rgba(0,229,255,0.12); box-shadow:0 10px 40px rgba(0,0,0,0.6); background:#0b0b0b; touch-action:none;
@@ -39,12 +47,6 @@
 </head>
 <body>
   <header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
-
-  <!-- 🔥 NUEVO: Precarga silenciosa para evitar congelamiento en celular -->
-  <div style="opacity:0; height:0; overflow:hidden;">
-      <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
-      <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
-  </div>
 
   <div class="controls">
     <button id="btnEllas">👚 Ellas</button>
@@ -68,6 +70,7 @@
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
+/* ============================ */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -82,6 +85,7 @@ const DPR = window.devicePixelRatio || 1;
 const HANDLE = 20;
 const MIN_SIZE = 30;
 
+/* ============================ */
 let mockupImg = null;
 let artImg = null;
 let art = { x: 100, y: 150, w: 300, h: 300 };
@@ -93,20 +97,20 @@ let resizing = false;
 let resizeDir = null;
 let dragOffset = { x: 0, y: 0 };
 
+/* =====================================================
+   ★ FIX DEFINITIVO
+   No se usa style.setProperty porque móvil lo ignora.
+   Ahora se activa una clase que SÍ respeta !important.
+   ===================================================== */
 function setCanvasSizeToImage(img){
-  const dpr = DPR;
-  canvas.width = img.width * dpr;
-  canvas.height = img.height * dpr;
+  canvas.width = img.width * DPR;
+  canvas.height = img.height * DPR;
 
-  canvas.style.setProperty(
-    "width",
-    Math.min(img.width, window.innerWidth - 40) + "px",
-    "important"
-  );
+  canvas.classList.add("canvas-fixed-size");
 
-  canvas.style.height = "auto";
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
+/* ===================================================== */
 
 function draw(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -159,6 +163,7 @@ function getResizeDirection(p){
   return null;
 }
 
+/* ============================ */
 canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
   if (activePointerId && activePointerId !== e.pointerId) return;
@@ -229,34 +234,22 @@ canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('pointerout', endPointer);
 
-/* =====================================================
-   🚀 FIX FINAL PARA CELULAR — Mockup cargado en memoria
-   ===================================================== */
-function loadDefaultMockup(baseName) {
-
-    const preloadImg = document.getElementById(
-        baseName === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos"
-    );
-
-    if (!preloadImg) {
-        alert("No existe el mockup precargado");
-        return;
+/* ============================ */
+function loadDefaultMockup(baseName){
+  const exts = ['png','jpg','jpeg'];
+  let i = 0;
+  function tryLoad(){
+    if (i>=exts.length){
+      alert("No se encontró "+baseName+".png/.jpg/.jpeg");
+      return;
     }
-
     const img = new Image();
     img.crossOrigin = "anonymous";
-
-    img.onload = () => {
-        mockupImg = img;
-        setCanvasSizeToImage(img);
-        draw();
-    };
-
-    img.onerror = () => {
-        alert("No se pudo cargar el mockup");
-    };
-
-    img.src = preloadImg.src;
+    img.onload = () => { mockupImg = img; setCanvasSizeToImage(img); draw(); };
+    img.onerror = () => { i++; tryLoad(); };
+    img.src = `${baseName}.${exts[i]}`;
+  }
+  tryLoad();
 }
 
 btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
@@ -327,7 +320,7 @@ resetBtn.addEventListener('click', ()=>{
   art = { x:100, y:150, w:300, h:300 };
   canvas.width = 800 * DPR;
   canvas.height = 1000 * DPR;
-  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
+  canvas.classList.add("canvas-fixed-size");
   ctx.setTransform(DPR,0,0,DPR,0,0);
   draw();
 });
@@ -335,7 +328,7 @@ resetBtn.addEventListener('click', ()=>{
 (function init(){
   canvas.width = 800 * DPR;
   canvas.height = 1000 * DPR;
-  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
+  canvas.classList.add("canvas-fixed-size");
   ctx.setTransform(DPR,0,0,DPR,0,0);
   draw();
 })();
