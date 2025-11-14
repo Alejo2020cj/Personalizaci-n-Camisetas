@@ -1,190 +1,466 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>¡Diseña tu estilo!</title>
+<title>Diseñador Cyberpunk de Camisetas</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --neon1: #ff00cc;
-    --neon2: #00e5ff;
-    --bg: #04040a;
+    --neon1:#ff00cc; --neon2:#00e5ff; --bg:#04040a;
   }
-  html,body{height:100%;margin:0;background:radial-gradient(circle at top left,var(--bg),#0b0b12);font-family:'Orbitron',sans-serif;color:#fff;}
-  header{ text-align:center;padding:18px;background:linear-gradient(90deg,var(--neon1),#2b2bff);box-shadow:0 0 30px rgba(255,0,204,0.15); font-size:1.4rem; }
-  .wrap{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px; }
-  .controls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center; }
-  input[type=file]{ background:#0b0b0f; color:var(--neon2); border:1px solid rgba(0,229,255,0.08); padding:8px; border-radius:8px; }
-  button{ background:linear-gradient(90deg,var(--neon1),var(--neon2)); border:none; padding:10px 14px; border-radius:10px; color:#000; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,0.4); cursor:pointer; }
-  .canvas-area{ width:min(760px,95vw); height:auto; display:flex; justify-content:center; align-items:center; padding:10px; }
-  canvas{ width:100%; height:auto; max-height:78vh; background:#0a0a0a; border-radius:10px; box-shadow:0 0 40px rgba(0,229,255,0.06); border:2px solid rgba(0,229,255,0.12); touch-action:none; }
-  .hint{ color:#cfd8ff88; font-size:0.9rem; margin-top:6px; text-align:center; }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(circle at top left,var(--bg),#0b0b12);
+    color:#fff;
+    font-family:'Orbitron',sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+  }
+  header{
+    width:100%;
+    text-align:center;
+    padding:14px;
+    background:linear-gradient(90deg,var(--neon1),var(--neon2));
+    box-shadow:0 6px 30px rgba(0,0,0,0.4);
+    border-radius:8px;
+    font-size:1.2rem;
+  }
+
+  /* CONTROLES: diseño responsivo: fila que envuelve */
+  .controls{
+    width:100%;
+    max-width:1000px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    padding:8px;
+  }
+
+  .controls > * {
+    /* para inputs y botones tamaño consistente */
+    min-width:120px;
+  }
+
+  button, .file-label {
+    background: linear-gradient(90deg,var(--neon1),var(--neon2));
+    color: #000;
+    border: none;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+    box-shadow:0 8px 20px rgba(0,0,0,0.35);
+    text-align:center;
+  }
+
+  /* file input hidden, label styled as button */
+  input[type="file"]{ display:none; }
+
+  .file-label{
+    display:inline-block;
+  }
+
+  /* small helper styling */
+  .small {
+    background: transparent;
+    border: 1px dashed rgba(0,229,255,0.12);
+    color: rgba(255,255,255,0.9);
+    padding:8px 10px;
+    border-radius:8px;
+    min-width:150px;
+  }
+
+  /* canvas container */
+  .canvas-wrap{
+    width:100%;
+    max-width:900px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+
+  canvas{
+    width:100%;
+    height:auto;
+    max-height:78vh;
+    border-radius:12px;
+    border:2px solid rgba(0,229,255,0.12);
+    box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    background:#0b0b0b;
+    touch-action:none; /* importante para touch */
+  }
+
+  .hint{ color:#cfe9ff88; font-size:0.9rem; text-align:center; max-width:900px; }
+
+  /* pequeños ajustes responsive */
+  @media (max-width:540px){
+    .controls > * { min-width: 48%; }
+    .controls { gap:8px; }
+  }
 </style>
 </head>
 <body>
-<header>👕 ¡Diseña tu estilo!</header>
-<div class="wrap">
+  <header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
+
   <div class="controls">
-    <label>Camiseta: <input id="mockupInput" type="file" accept="image/*"></label>
-    <label>Diseño: <input id="artInput" type="file" accept="image/*"></label>
+    <!-- Mockups predeterminados -->
+    <button id="btnEllas">👚 Ellas</button>
+    <button id="btnEllos">👕 Ellos</button>
+
+    <!-- Subir mockup propio -->
+    <label class="file-label" for="mockupInput">📤 Subir mockup</label>
+    <input id="mockupInput" type="file" accept="image/*">
+
+    <!-- Subir arte/diseño -->
+    <label class="file-label" for="artInput">🖼️ Subir diseño</label>
+    <input id="artInput" type="file" accept="image/*">
+
+    <!-- Descargar y Reset -->
     <button id="downloadBtn">⬇️ Descargar PNG</button>
     <button id="resetBtn">↺ Reiniciar</button>
   </div>
-  <div class="canvas-area"><canvas id="canvas"></canvas></div>
-  <div class="hint">Toca o haz clic y arrastra para mover. Arrastra cualquier borde o esquina para redimensionar.</div>
-</div>
 
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="800" height="1000"></canvas>
+  </div>
+
+  <div class="hint">Toca/arrastra para mover. Arrastra cualquier borde o esquina para redimensionar. Compatible PC y móvil.</div>
 
 <script>
+/* =========================
+   Variables DOM
+   ========================= */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+
+const btnEllas = document.getElementById('btnEllas');
+const btnEllos  = document.getElementById('btnEllos');
 const mockupInput = document.getElementById('mockupInput');
 const artInput = document.getElementById('artInput');
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
 
-let mockupImg=null, artImg=null;
-let art={x:100,y:100,w:200,h:200};
-let pointerDown=false, activePointerId=null;
-let dragging=false, resizing=false, selected=false;
-let dragOffset={x:0,y:0};
-let resizeDir=null;
-const HANDLE_MARGIN=20, MIN_SIZE=30;
+/* =========================
+   Estado de imágenes y diseño
+   ========================= */
+let mockupImg = null; // imagen base (mockup)
+let artImg = null;    // imagen del diseño
 
+// cuadro del arte en coordenadas BITMAP (no DOM)
+let art = { x: 100, y: 150, w: 300, h: 300 };
+
+/* interacción */
+let pointerDown = false;
+let activePointerId = null;
+let dragging = false;
+let resizing = false;
+let resizeDir = null;
+let dragOffset = {x:0,y:0};
+
+const HANDLE_MARGIN = 20;
+const MIN_SIZE = 30;
+
+/* =========================
+   Helpers: set canvas size to image (DPR aware)
+   ========================= */
 function setCanvasSizeToImage(img){
-  const dpr=window.devicePixelRatio||1;
-  canvas.width=img.width*dpr;
-  canvas.height=img.height*dpr;
-  canvas.style.width=Math.min(img.width,window.innerWidth-40)+'px';
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = img.width * dpr;
+  canvas.height = img.height * dpr;
+  canvas.style.width = Math.min(img.width, window.innerWidth - 40) + 'px';
+  // keep height auto; browser will scale by aspect ratio
   ctx.setTransform(dpr,0,0,dpr,0,0);
 }
+
+/* =========================
+   Dibujado
+   ========================= */
 function draw(){
+  // limpiar bitmap
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(mockupImg) ctx.drawImage(mockupImg,0,0,canvas.width/(window.devicePixelRatio||1),canvas.height/(window.devicePixelRatio||1));
-  if(artImg) ctx.drawImage(artImg,art.x,art.y,art.w,art.h);
-  if(selected && artImg){
-    ctx.strokeStyle='#00ffff'; ctx.lineWidth=2; ctx.strokeRect(art.x,art.y,art.w,art.h);
+
+  // dibujar mockup a tamaño lógico
+  if (mockupImg) {
+    ctx.drawImage(mockupImg, 0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+  } else {
+    // si no hay mockup, fondo neutro
+    ctx.fillStyle = '#0b0b0b';
+    ctx.fillRect(0,0,canvas.width/(window.devicePixelRatio||1), canvas.height/(window.devicePixelRatio||1));
+  }
+
+  // dibujar arte si existe
+  if (artImg) {
+    ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
+  }
+
+  // borde selección
+  if (artImg && (dragging || resizing || pointerDown)) {
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(art.x, art.y, art.w, art.h);
+    // dibujar manejador en esquina inferior derecha
+    const hs = HANDLE_MARGIN;
+    ctx.fillStyle = '#ff00cc';
+    ctx.fillRect(art.x + art.w - hs/2, art.y + art.h - hs/2, hs, hs);
   }
 }
-function getPointerPos(e){
-  const rect=canvas.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+
+/* =========================
+   Coordenadas: convertir client -> bitmap coords del canvas
+   ========================= */
+function getPointerPos(evt){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const clientX = (evt.clientX !== undefined) ? evt.clientX : (evt.touches && evt.touches[0] && evt.touches[0].clientX);
+  const clientY = (evt.clientY !== undefined) ? evt.clientY : (evt.touches && evt.touches[0] && evt.touches[0].clientY);
   return {
-    x:(e.clientX-rect.left)*(canvas.width/rect.width)/dpr,
-    y:(e.clientY-rect.top)*(canvas.height/rect.height)/dpr
+    x: (clientX - rect.left) * (canvas.width / rect.width) / dpr,
+    y: (clientY - rect.top)  * (canvas.height / rect.height) / dpr
   };
 }
-function getResizeDirection(pos){
-  const nearLeft = Math.abs(pos.x - art.x) < HANDLE_MARGIN;
-  const nearRight = Math.abs(pos.x - (art.x + art.w)) < HANDLE_MARGIN;
-  const nearTop = Math.abs(pos.y - art.y) < HANDLE_MARGIN;
-  const nearBottom = Math.abs(pos.y - (art.y + art.h)) < HANDLE_MARGIN;
 
-  if (nearTop && nearLeft) return "nw";
-  if (nearTop && nearRight) return "ne";
-  if (nearBottom && nearLeft) return "sw";
-  if (nearBottom && nearRight) return "se";
-  if (nearTop) return "n";
-  if (nearBottom) return "s";
-  if (nearLeft) return "w";
-  if (nearRight) return "e";
+/* =========================
+   Detección: dentro del arte o zona de resize
+   ========================= */
+function isInsideArt(p){
+  return p.x >= art.x && p.x <= art.x + art.w && p.y >= art.y && p.y <= art.y + art.h;
+}
+function getResizeDirection(p){
+  const nearLeft = Math.abs(p.x - art.x) < HANDLE_MARGIN;
+  const nearRight = Math.abs(p.x - (art.x + art.w)) < HANDLE_MARGIN;
+  const nearTop = Math.abs(p.y - art.y) < HANDLE_MARGIN;
+  const nearBottom = Math.abs(p.y - (art.y + art.h)) < HANDLE_MARGIN;
+  if (nearTop && nearLeft) return 'nw';
+  if (nearTop && nearRight) return 'ne';
+  if (nearBottom && nearLeft) return 'sw';
+  if (nearBottom && nearRight) return 'se';
+  if (nearTop) return 'n';
+  if (nearBottom) return 's';
+  if (nearLeft) return 'w';
+  if (nearRight) return 'e';
   return null;
 }
-function isInsideArt(pos){
-  return pos.x>=art.x && pos.x<=art.x+art.w && pos.y>=art.y && pos.y<=art.y+art.h;
-}
 
-canvas.addEventListener('pointerdown',e=>{
-  e.preventDefault();
-  if(activePointerId && activePointerId!==e.pointerId)return;
-  activePointerId=e.pointerId;
+/* =========================
+   Pointer events (mouse + touch)
+   ========================= */
+canvas.addEventListener('pointerdown', (ev) => {
+  ev.preventDefault();
+  // if another pointer active, ignore (simple multi-touch protection)
+  if (activePointerId !== null && activePointerId !== ev.pointerId) return;
+  activePointerId = ev.pointerId;
   canvas.setPointerCapture(activePointerId);
-  pointerDown=true;
-  const pos=getPointerPos(e);
-  const dir=getResizeDirection(pos);
-  if(artImg && dir){
-    resizing=true; resizeDir=dir; selected=true;
-  }else if(artImg && isInsideArt(pos)){
-    dragging=true; selected=true;
-    dragOffset={x:pos.x-art.x,y:pos.y-art.y};
-  }else selected=false;
-  draw();
-});
 
-canvas.addEventListener('pointermove',e=>{
-  const pos=getPointerPos(e);
-  const dir=getResizeDirection(pos);
-  if(dir) canvas.style.cursor=dir+"-resize";
-  else if(artImg && isInsideArt(pos)) canvas.style.cursor="move";
-  else canvas.style.cursor="default";
+  pointerDown = true;
+  const pos = getPointerPos(ev);
+  const dir = getResizeDirection(pos);
 
-  if(!pointerDown||activePointerId!==e.pointerId)return;
-  e.preventDefault();
-
-  if(dragging){
-    art.x=pos.x-dragOffset.x;
-    art.y=pos.y-dragOffset.y;
-  }else if(resizing){
-    let dx=pos.x-art.x, dy=pos.y-art.y;
-    switch(resizeDir){
-      case"n": art.h+=art.y-pos.y; art.y=pos.y; break;
-      case"s": art.h=dy; break;
-      case"w": art.w+=art.x-pos.x; art.x=pos.x; break;
-      case"e": art.w=dx; break;
-      case"nw": art.w+=art.x-pos.x; art.h+=art.y-pos.y; art.x=pos.x; art.y=pos.y; break;
-      case"ne": art.w=dx; art.h+=art.y-pos.y; art.y=pos.y; break;
-      case"sw": art.w+=art.x-pos.x; art.x=pos.x; art.h=dy; break;
-      case"se": art.w=dx; art.h=dy; break;
-    }
-    if(art.w<MIN_SIZE) art.w=MIN_SIZE;
-    if(art.h<MIN_SIZE) art.h=MIN_SIZE;
+  if (artImg && dir) {
+    resizing = true; resizeDir = dir;
+  } else if (artImg && isInsideArt(pos)) {
+    dragging = true;
+    dragOffset.x = pos.x - art.x;
+    dragOffset.y = pos.y - art.y;
+  } else {
+    // tocó fuera -> deseleccionar
+    dragging = false; resizing = false;
   }
   draw();
 });
 
-function endPointer(e){
-  if(activePointerId!==e.pointerId)return;
-  e.preventDefault();
-  dragging=resizing=false; pointerDown=false; resizeDir=null;
-  try{canvas.releasePointerCapture(activePointerId);}catch{}
-  activePointerId=null; selected=false; draw();
-}
-canvas.addEventListener('pointerup',endPointer);
-canvas.addEventListener('pointercancel',endPointer);
-canvas.addEventListener('pointerout',endPointer);
+canvas.addEventListener('pointermove', (ev) => {
+  const pos = getPointerPos(ev);
+  const dir = getResizeDirection(pos);
+  if (dir) canvas.style.cursor = dir + '-resize';
+  else if (artImg && isInsideArt(pos)) canvas.style.cursor = 'move';
+  else canvas.style.cursor = 'default';
 
-mockupInput.addEventListener('change',e=>{
-  const file=e.target.files[0]; if(!file)return;
-  const img=new Image();
-  img.onload=()=>{mockupImg=img; setCanvasSizeToImage(img); draw();};
-  img.src=URL.createObjectURL(file);
-});
+  if (!pointerDown || activePointerId !== ev.pointerId) return;
+  ev.preventDefault();
 
-artInput.addEventListener('change',e=>{
-  const file=e.target.files[0]; if(!file)return;
-  const img=new Image();
-  img.onload=()=>{
-    artImg=img;
-    const cw=canvas.width/(window.devicePixelRatio||1), ch=canvas.height/(window.devicePixelRatio||1);
-    art.w=cw*0.4; art.h=art.w*(img.height/img.width);
-    art.x=(cw-art.w)/2; art.y=(ch-art.h)/2; draw();
-  };
-  img.src=URL.createObjectURL(file);
-});
-
-downloadBtn.addEventListener('click',()=>{
+  if (dragging) {
+    art.x = pos.x - dragOffset.x;
+    art.y = pos.y - dragOffset.y;
+  } else if (resizing) {
+    const dx = pos.x - art.x;
+    const dy = pos.y - art.y;
+    switch (resizeDir) {
+      case 'n': art.h += art.y - pos.y; art.y = pos.y; break;
+      case 's': art.h = dy; break;
+      case 'w': art.w += art.x - pos.x; art.x = pos.x; break;
+      case 'e': art.w = dx; break;
+      case 'nw': art.w += art.x - pos.x; art.h += art.y - pos.y; art.x = pos.x; art.y = pos.y; break;
+      case 'ne': art.w = dx; art.h += art.y - pos.y; art.y = pos.y; break;
+      case 'sw': art.w += art.x - pos.x; art.x = pos.x; art.h = dy; break;
+      case 'se': art.w = dx; art.h = dy; break;
+    }
+    if (art.w < MIN_SIZE) art.w = MIN_SIZE;
+    if (art.h < MIN_SIZE) art.h = MIN_SIZE;
+  }
   draw();
-  canvas.toBlob(b=>{
-    if(!b)return; const url=URL.createObjectURL(b);
-    const a=document.createElement('a'); a.href=url; a.download='camiseta_cyberpunk.png';
-    a.click(); URL.revokeObjectURL(url);
-  });
 });
 
-resetBtn.addEventListener('click',()=>{
-  mockupImg=null; artImg=null; art={x:100,y:100,w:200,h:200}; selected=false;
-  ctx.setTransform(1,0,0,1,0,0); canvas.width=800; canvas.height=600; draw();
+function endPointer(ev){
+  if (activePointerId !== ev.pointerId) return;
+  dragging = resizing = false;
+  pointerDown = false;
+  resizeDir = null;
+  try { canvas.releasePointerCapture(activePointerId); } catch(e){}
+  activePointerId = null;
+  // UX: ocultar borde al soltar (si prefieres mantenerlo, cambia a selected=true)
+  draw();
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('pointerout', endPointer);
+
+/* =========================
+   Load default mockup helper:
+   intenta png -> jpg -> jpeg (soporta archivos quemados con distintas extensiones)
+   ========================= */
+function loadDefaultMockup(baseName){
+  const tryExt = (ext, onLoad, onError) => {
+    const i = new Image();
+    i.crossOrigin = 'anonymous'; // intentar permitir export si el recurso lo permite
+    i.onload = () => onLoad(i);
+    i.onerror = onError;
+    i.src = baseName + '.' + ext;
+  };
+  tryExt('png', (img)=>{ mockupImg = img; setCanvasSizeToImage(img); draw(); }, ()=>{
+    tryExt('jpg', (img)=>{ mockupImg = img; setCanvasSizeToImage(img); draw(); }, ()=>{
+      tryExt('jpeg', (img)=>{ mockupImg = img; setCanvasSizeToImage(img); draw(); }, ()=>{
+        alert('No se encontró ' + baseName + '.png/.jpg/.jpeg en la carpeta. Coloca el archivo junto a index.html.');
+      });
+    });
+  });
+}
+
+/* =========================
+   BOTONES Ellas / Ellos
+   - Cambia aquí los nombres base si tus archivos se llaman distinto
+   ========================= */
+const DEFAULT_ELLAS = 'mockup_ellas'; // <- coloca el nombre base (sin extensión) si tus archivos se llaman diferente
+const DEFAULT_ELLOS = 'mockup_ellos';
+
+btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
+btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
+
+/* =========================
+   SUBIR MOCKUP PROPIO (input file)
+   ========================= */
+mockupInput.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  const i = new Image();
+  i.onload = () => { mockupImg = i; setCanvasSizeToImage(i); draw(); URL.revokeObjectURL(url); };
+  i.onerror = () => { alert('No se pudo cargar el mockup.'); URL.revokeObjectURL(url); };
+  i.src = url;
 });
-draw();
+
+/* =========================
+   SUBIR ARTE / DISEÑO
+   ========================= */
+artInput.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  const i = new Image();
+  i.onload = () => {
+    artImg = i;
+    // escalar arte al 40% del ancho lógico del canvas
+    const cw = canvas.width / (window.devicePixelRatio || 1);
+    art.w = cw * 0.4;
+    art.h = art.w * (i.height / i.width);
+    art.x = (cw - art.w) / 2;
+    art.y = (canvas.height / (window.devicePixelRatio || 1) - art.h) / 2;
+    draw();
+    URL.revokeObjectURL(url);
+  };
+  i.onerror = () => { alert('No se pudo cargar el diseño.'); URL.revokeObjectURL(url); };
+  i.src = url;
+});
+
+/* =========================
+   DESCARGA ROBUSTA
+   ========================= */
+downloadBtn.addEventListener('click', async () => {
+  draw();
+  // intento toBlob
+  try {
+    await new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('toBlob returned null'));
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'camiseta_cyberpunk.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 'image/png');
+    });
+    return;
+  } catch (err) {
+    console.warn('toBlob falló:', err);
+  }
+
+  // fallback toDataURL
+  try {
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl; a.download = 'camiseta_cyberpunk.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    return;
+  } catch (err) {
+    console.error('toDataURL falló (canvas probablemente tainted):', err);
+    alert(
+      'No se pudo descargar la imagen. Esto suele ocurrir por restricciones CORS en las imágenes.\n\n' +
+      'Soluciones:\n' +
+      '• Asegúrate de que los mockups quemados estén en la MISMA carpeta que index.html y utiliza el servidor local o GitHub Pages.\n' +
+      '• Si pruebas con archivos locales, ejecuta un servidor simple: `python -m http.server` o `npx http-server` y abre http://localhost:8000\n' +
+      'Revisa la consola del navegador para más detalles.'
+    );
+  }
+});
+
+/* =========================
+   RESET
+   ========================= */
+resetBtn.addEventListener('click', ()=>{
+  mockupImg = null; artImg = null;
+  art = { x:100, y:150, w:300, h:300 };
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 800 * dpr; canvas.height = 1000 * dpr;
+  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+});
+
+/* =========================
+   Inicializar canvas por defecto
+   ========================= */
+(function init(){
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 800 * dpr;
+  canvas.height = 1000 * dpr;
+  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+})();
 </script>
 </body>
 </html>
