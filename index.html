@@ -1,267 +1,270 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cyberpunk T-Shirt Customizer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personalizar Camiseta - Cyberpunk</title>
+
 <style>
-/* --- ESTILO CYBERPUNK --- */
-body {
-  background: #0a0a0f;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  color: #f2f2f2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+  body {
+    margin:0;
+    font-family: 'Arial', sans-serif;
+    background: #0d0d0d;
+    color: #fff;
+    text-align:center;
+  }
 
-h1 {
-  margin-top: 20px;
-  color: #00eaff;
-  font-size: 28px;
-  text-shadow: 0 0 8px #00eaff;
-}
+  h1 {
+    margin-top:15px;
+    font-size:22px;
+    letter-spacing:2px;
+    color:#00f6ff;
+    text-shadow:0 0 10px #00f6ff;
+  }
 
-.container {
-  width: 95%;
-  max-width: 480px;
-  margin-top: 20px;
-}
+  .controls {
+    margin-top:15px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:0 15px;
+  }
 
-button, label {
-  width: 100%;
-  display: block;
-  margin: 10px 0;
-  padding: 12px;
-  background: #12121a;
-  border: 2px solid #00eaff;
-  border-radius: 10px;
-  color: #00eaff;
-  font-size: 16px;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: 0 0 10px #00eaff55;
-}
+  button, label {
+    background:#111;
+    border:1px solid #00f6ff;
+    color:#00f6ff;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+    width:100%;
+    text-shadow:0 0 5px #00f6ff;
+  }
 
-button:hover, label:hover {
-  background: #00eaff33;
-}
+  button:hover, label:hover {
+    background:#00f6ff;
+    color:#000;
+    text-shadow:none;
+  }
 
-#canvasWrapper {
-  margin-top: 25px;
-  width: 100%;
-  background: #111;
-  padding: 10px;
-  border: 2px solid #00eaff55;
-  border-radius: 12px;
-}
+  input[type="file"] {
+    display:none;
+  }
 
-canvas {
-  width: 100%;
-  background: #000;
-  border-radius: 10px;
-}
-
-/* --- ÁREA DE EDICIÓN (CUADRO DE REDIMENSIÓN) --- */
-#editBox {
-  position: absolute;
-  border: 2px dashed #00eaff;
-  display: none;
-}
-
-.resizeHandle {
-  width: 18px;
-  height: 18px;
-  background: #00eaff;
-  position: absolute;
-  border-radius: 50%;
-}
-
-.resizeHandle.br { bottom: -10px; right: -10px; }
-.resizeHandle.bl { bottom: -10px; left: -10px; }
-.resizeHandle.tr { top: -10px; right: -10px; }
-.resizeHandle.tl { top: -10px; left: -10px; }
+  canvas {
+    margin-top:20px;
+    max-width:100%;
+    border:2px solid #00f6ff;
+    border-radius:10px;
+    box-shadow:0 0 15px #00f6ff;
+    background:#000;
+  }
 </style>
+
 </head>
 <body>
-<h1>Cyberpunk T-Shirt Customizer</h1>
 
-<div class="container">
-  <button id="btnEllas">Ellas</button>
-  <button id="btnEllos">Ellos</button>
+<h1>EDITOR DE CAMISETAS CYBERPUNK</h1>
 
-  <label for="uploadMockup">Subir mi propio mockup</label>
-  <input type="file" id="uploadMockup" accept="image/*" style="display:none;" />
+<div class="controls">
+  <button id="btnElla">Ellas 👚</button>
+  <button id="btnEllos">Ellos 👕</button>
 
-  <label for="uploadDesign">Subir diseño</label>
-  <input type="file" id="uploadDesign" accept="image/*" style="display:none;" />
+  <label for="mockupInput">Subir Mockup</label>
+  <input type="file" id="mockupInput" accept="image/*">
 
-  <button id="downloadBtn">Descargar Camiseta</button>
+  <label for="designInput">Subir Diseño</label>
+  <input type="file" id="designInput" accept="image/*">
+
+  <button id="downloadBtn">Descargar Diseño Final</button>
 </div>
 
-<div id="canvasWrapper">
-  <canvas id="canvas" width="800" height="1000"></canvas>
-</div>
-
-<div id="editBox">
-  <div class="resizeHandle tl"></div>
-  <div class="resizeHandle tr"></div>
-  <div class="resizeHandle bl"></div>
-  <div class="resizeHandle br"></div>
-</div>
+<canvas id="canvas"></canvas>
 
 <script>
-/* ============================================================
-   CONFIGURACIÓN
-   ============================================================ */
-const MOCKUP_ELLAS = "mockup_ellas.jpg";
-const MOCKUP_ELLOS = "mockup_ellos.jpg";
+/* ------------------------------------------------------------------------------------
+   VARIABLES PRINCIPALES
+------------------------------------------------------------------------------------ */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+let mockupImg = null;
+let designImg = null;
 
-let mockup = new Image();
-let design = new Image();
-let designLoaded = false;
-let mockupLoaded = false;
+let designX = 100, designY = 100;
+let designW = 200, designH = 200;
+let isMoving = false;
+let isResizing = false;
+let offsetX = 0, offsetY = 0;
 
-let dX = 200, dY = 330, dW = 350, dH = 350;
-let dragging = false;
-let resizing = false;
-let resizeDir = "";
-let offsetX = 0;
-let offsetY = 0;
-
-const editBox = document.getElementById("editBox");
-
-/* ============================================================
-   🔥 PRELOAD PARA EVITAR LAG EN CELULAR
-   ============================================================ */
-const preloadEllas = new Image();
-const preloadEllos = new Image();
-
-preloadEllas.src = MOCKUP_ELLAS;
-preloadEllos.src = MOCKUP_ELLOS;
-
-/* Esta función usa los preloads ya decodificados */
-function loadMockupPreloaded(img) {
-  mockup = img;
-  mockupLoaded = true;
-  draw();
+/* ------------------------------------------------------------------------------------
+   AJUSTAR CANVAS AL TAMAÑO DE LA IMAGEN DEL MOCKUP
+------------------------------------------------------------------------------------ */
+function setCanvasSizeToImage(img) {
+  canvas.width = img.width;
+  canvas.height = img.height;
 }
 
-/* ============================================================ */
-function loadDesign(src) {
-  design = new Image();
-  design.crossOrigin = "anonymous";
-  design.onload = () => { designLoaded = true; showEditBox(); draw(); };
-  design.src = src;
-}
-
-/* BOTONES */
-btnEllas.onclick = () => {
-  loadMockupPreloaded(preloadEllas);
-};
-
-btnEllos.onclick = () => {
-  loadMockupPreloaded(preloadEllos);
-};
-
-/* Upload mockup (sin preload porque viene del usuario) */
-uploadMockup.onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => { mockup = img; mockupLoaded = true; draw(); };
-  img.src = URL.createObjectURL(file);
-};
-
-/* Upload diseño */
-uploadDesign.onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  loadDesign(URL.createObjectURL(file));
-};
-
-/* ============================================================
-   DIBUJO
-   ============================================================ */
+/* ------------------------------------------------------------------------------------
+   DIBUJAR TODO
+------------------------------------------------------------------------------------ */
 function draw() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  if (mockupLoaded) ctx.drawImage(mockup,0,0,canvas.width,canvas.height);
-  if (designLoaded) ctx.drawImage(design, dX, dY, dW, dH);
+  if (mockupImg) ctx.drawImage(mockupImg, 0, 0, canvas.width, canvas.height);
+  if (designImg) ctx.drawImage(designImg, designX, designY, designW, designH);
 }
 
-/* ============================================================
-   EDITBOX
-   ============================================================ */
-function showEditBox() {
-  editBox.style.display = "block";
-  editBox.style.left = dX + "px";
-  editBox.style.top = dY + "px";
-  editBox.style.width = dW + "px";
-  editBox.style.height = dH + "px";
-}
+/* ------------------------------------------------------------------------------------
+   FUNCIÓN OPTIMIZADA (FIX CELULAR) PARA CARGAR MOCKUPS QUEMADOS
+------------------------------------------------------------------------------------ */
+function loadDefaultMockup(baseName){
+  const exts = ['png','jpg','jpeg'];
+  let i = 0;
 
-function getPos(e) {
-  if (e.touches) return {
-    x: e.touches[0].clientX - canvas.getBoundingClientRect().left,
-    y: e.touches[0].clientY - canvas.getBoundingClientRect().top
-  };
-  return {
-    x: e.clientX - canvas.getBoundingClientRect().left,
-    y: e.clientY - canvas.getBoundingClientRect().top
-  };
-}
+  function tryLoad(){
+    if (i >= exts.length){
+      alert("No se encontró " + baseName + ".png/.jpg/.jpeg");
+      return;
+    }
 
-canvas.addEventListener("mousedown", startDrag);
-canvas.addEventListener("touchstart", startDrag);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.decoding = "async";  // 🔥 FIX anti-congelamiento en móviles
 
-function startDrag(e) {
-  const pos = getPos(e);
-  if(pos.x > dX && pos.x < dX+dW && pos.y > dY && pos.y < dY+dH){
-    dragging = true;
-    offsetX = pos.x - dX;
-    offsetY = pos.y - dY;
-    showEditBox();
+    img.onload = async () => {
+      try { await img.decode(); } catch(e){}
+
+      // 🔥 LIBERA UI antes de dibujar (fix definitivo)
+      requestAnimationFrame(() => {
+        mockupImg = img;
+        setCanvasSizeToImage(img);
+        draw();
+      });
+    };
+
+    img.onerror = () => { i++; tryLoad(); };
+
+    img.src = `${baseName}.${exts[i]}`;
   }
+
+  tryLoad();
 }
 
-window.addEventListener("mousemove", moveDrag);
-window.addEventListener("touchmove", moveDrag);
+/* ------------------------------------------------------------------------------------
+   CARGAR MOCKUP DESDE ARCHIVO
+------------------------------------------------------------------------------------ */
+document.getElementById('mockupInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => { mockupImg = img; setCanvasSizeToImage(img); draw(); };
+  img.src = URL.createObjectURL(file);
+});
 
-function moveDrag(e) {
-  if (!dragging && !resizing) return;
-  const pos = getPos(e);
+/* ------------------------------------------------------------------------------------
+   CARGAR DISEÑO
+------------------------------------------------------------------------------------ */
+document.getElementById('designInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = () => { designImg = img; draw(); };
+  img.src = URL.createObjectURL(file);
+});
 
-  if (dragging) {
-    dX = pos.x - offsetX;
-    dY = pos.y - offsetY;
-    draw();
-    showEditBox();
+/* ------------------------------------------------------------------------------------
+   BOTONES ELLOS / ELLAS (IMÁGENES QUEMADAS)
+------------------------------------------------------------------------------------ */
+document.getElementById('btnElla').addEventListener('click', () => {
+  loadDefaultMockup('mockup_ella');
+});
+
+document.getElementById('btnEllos').addEventListener('click', () => {
+  loadDefaultMockup('mockup_ellos');
+});
+
+/* ------------------------------------------------------------------------------------
+   MOVIMIENTO Y REDIMENSION EN PC + MÓVIL
+------------------------------------------------------------------------------------ */
+canvas.addEventListener('pointerdown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const resizeMargin = 40;
+
+  if (designImg &&
+      x >= designX + designW - resizeMargin &&
+      y >= designY + designH - resizeMargin) {
+
+      isResizing = true;
+      offsetX = x - (designX + designW);
+      offsetY = y - (designY + designH);
+      return;
   }
-}
 
-window.addEventListener("mouseup", endDrag);
-window.addEventListener("touchend", endDrag);
+  if (designImg &&
+      x >= designX && x <= designX + designW &&
+      y >= designY && y <= designY + designH) {
 
-function endDrag(){ dragging = false; resizing = false; }
+      isMoving = true;
+      offsetX = x - designX;
+      offsetY = y - designY;
+  }
+});
 
-/* ============================================================
-   DESCARGA
-   ============================================================ */
-downloadBtn.addEventListener("click", () => {
+canvas.addEventListener('pointermove', e => {
+  if (!isMoving && !isResizing) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (isMoving) {
+      designX = x - offsetX;
+      designY = y - offsetY;
+  }
+
+  if (isResizing) {
+      designW = x - designX - offsetX;
+      designH = y - designY - offsetY;
+  }
+
   draw();
-  canvas.toBlob(blob => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "camiseta.png";
-    a.click();
-  });
+});
+
+canvas.addEventListener('pointerup', () => {
+  isMoving = false;
+  isResizing = false;
+});
+
+/* ------------------------------------------------------------------------------------
+   DESCARGAR IMAGEN FINAL
+------------------------------------------------------------------------------------ */
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+  draw();
+
+  try {
+    await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (!blob) return reject();
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'camiseta_cyberpunk.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        resolve();
+      });
+    });
+
+  } catch (err) {
+    alert("Error al descargar. Asegúrate de cargar imágenes desde GitHub Pages o servidor local.");
+  }
 });
 </script>
+
 </body>
 </html>
