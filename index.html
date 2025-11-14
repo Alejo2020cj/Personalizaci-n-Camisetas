@@ -85,7 +85,7 @@ const MIN_SIZE = 30;
 /* ============================
    NUEVO: optimiza (downscale) imagenes grandes a max 2048 px
    ============================ */
-function optimizeImage(img, maxSize = 2048) {
+function optimizeImage(img, maxSize = 1500) {
   return new Promise((resolve) => {
     // si ya está dentro del límite, devolverla tal cual
     if (img.width <= maxSize && img.height <= maxSize) {
@@ -395,3 +395,4 @@ resetBtn.addEventListener('click', ()=> {
 </script>
 </body>
 </html>
+
