@@ -29,14 +29,6 @@
   input[type="file"]{ display:none; }
   .file-label{ display:inline-block; }
   .canvas-wrap{ width:100%; max-width:900px; display:flex; justify-content:center; align-items:center; }
-
-  /* NUEVA CLASE QUE SOLUCIONA EL PROBLEMA EN MÓVIL */
-  .canvas-fixed-size {
-    width: 100% !important;
-    max-width: 900px !important;
-    height: auto !important;
-  }
-
   canvas{
     width:100%; height:auto; max-height:78vh; border-radius:12px;
     border:2px solid rgba(0,229,255,0.12); box-shadow:0 10px 40px rgba(0,0,0,0.6); background:#0b0b0b; touch-action:none;
@@ -47,6 +39,12 @@
 </head>
 <body>
   <header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
+
+  <!-- 🔥 NUEVO: Precarga silenciosa para evitar congelamiento en celular -->
+  <div style="opacity:0; height:0; overflow:hidden;">
+      <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
+      <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
+  </div>
 
   <div class="controls">
     <button id="btnEllas">👚 Ellas</button>
@@ -70,7 +68,6 @@
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
-/* ============================ */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -85,6 +82,34 @@ const DPR = window.devicePixelRatio || 1;
 const HANDLE = 20;
 const MIN_SIZE = 30;
 
+/* ============================
+   NUEVO: optimiza (downscale) imagenes grandes a max 2048 px
+   ============================ */
+function optimizeImage(img, maxSize = 2048) {
+  return new Promise((resolve) => {
+    // si ya está dentro del límite, devolverla tal cual
+    if (img.width <= maxSize && img.height <= maxSize) {
+      resolve(img);
+      return;
+    }
+    const scale = maxSize / Math.max(img.width, img.height);
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+
+    const buffer = document.createElement('canvas');
+    buffer.width = w;
+    buffer.height = h;
+    const bctx = buffer.getContext('2d');
+
+    // dibujar y convertir a imagen optimizada (jpeg para menor peso)
+    bctx.drawImage(img, 0, 0, w, h);
+    const dataUrl = buffer.toDataURL('image/jpeg', 0.92);
+    const out = new Image();
+    out.onload = () => resolve(out);
+    out.src = dataUrl;
+  });
+}
+
 /* ============================ */
 let mockupImg = null;
 let artImg = null;
@@ -97,21 +122,22 @@ let resizing = false;
 let resizeDir = null;
 let dragOffset = { x: 0, y: 0 };
 
-/* =====================================================
-   ★ FIX DEFINITIVO
-   No se usa style.setProperty porque móvil lo ignora.
-   Ahora se activa una clase que SÍ respeta !important.
-   ===================================================== */
 function setCanvasSizeToImage(img){
-  canvas.width = img.width * DPR;
-  canvas.height = img.height * DPR;
+  const dpr = DPR;
+  canvas.width = img.width * dpr;
+  canvas.height = img.height * dpr;
 
-  canvas.classList.add("canvas-fixed-size");
-
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // mantener estilo responsivo (no tocamos tu diseño)
+  canvas.style.setProperty(
+    "width",
+    Math.min(img.width, window.innerWidth - 40) + "px",
+    "important"
+  );
+  canvas.style.height = "auto";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-/* ===================================================== */
 
+/* ============================ */
 function draw(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -134,6 +160,7 @@ function draw(){
   }
 }
 
+/* ============================ */
 function getPointerPos(e){
   const rect = canvas.getBoundingClientRect();
   const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
@@ -163,7 +190,6 @@ function getResizeDirection(p){
   return null;
 }
 
-/* ============================ */
 canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
   if (activePointerId && activePointerId !== e.pointerId) return;
@@ -234,42 +260,76 @@ canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('pointerout', endPointer);
 
-/* ============================ */
-function loadDefaultMockup(baseName){
-  const exts = ['png','jpg','jpeg'];
-  let i = 0;
-  function tryLoad(){
-    if (i>=exts.length){
-      alert("No se encontró "+baseName+".png/.jpg/.jpeg");
-      return;
+/* =====================================================
+   🚀 FIX PARA CELULAR: usar la imagen precargada pero optimizada
+   ===================================================== */
+function loadDefaultMockup(baseName) {
+
+    // obtenemos el img precargado (ya en el DOM, evita fetchs adicionales)
+    const preloadImg = document.getElementById(
+        baseName === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos"
+    );
+
+    if (!preloadImg) {
+        alert("No existe el mockup precargado");
+        return;
     }
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => { mockupImg = img; setCanvasSizeToImage(img); draw(); };
-    img.onerror = () => { i++; tryLoad(); };
-    img.src = `${baseName}.${exts[i]}`;
-  }
-  tryLoad();
+
+    // cargamos esa fuente en un image temporal para poder optimizar (si es grande)
+    const temp = new Image();
+    temp.crossOrigin = "anonymous";
+    temp.onload = async () => {
+        // optimizamos (redimensionamos si hace falta) antes de asignar a mockupImg
+        try {
+            const optimized = await optimizeImage(temp, 2048);
+            mockupImg = optimized;
+            setCanvasSizeToImage(mockupImg);
+            draw();
+        } catch (err) {
+            // si falla la optimización, usar la original (degradado seguro)
+            mockupImg = temp;
+            setCanvasSizeToImage(mockupImg);
+            draw();
+        }
+    };
+    temp.onerror = () => {
+        alert("No se pudo cargar el mockup");
+    };
+    temp.src = preloadImg.src;
 }
 
 btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
 btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
 
+/* ============================
+   Cambio también para input de mockup: optimizar antes de usar
+   ============================ */
 mockupInput.addEventListener('change', (e) => {
   const f = e.target.files[0];
   if (!f) return;
   const url = URL.createObjectURL(f);
   const img = new Image();
-  img.onload = () => {
-    mockupImg = img;
-    setCanvasSizeToImage(img);
-    draw();
-    URL.revokeObjectURL(url);
+  img.onload = async () => {
+    try {
+      const optimized = await optimizeImage(img, 2048);
+      mockupImg = optimized;
+      setCanvasSizeToImage(mockupImg);
+      draw();
+    } catch {
+      mockupImg = img;
+      setCanvasSizeToImage(mockupImg);
+      draw();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   };
-  img.onerror = () => { alert("No se pudo cargar el mockup"); };
+  img.onerror = () => { alert("No se pudo cargar el mockup"); URL.revokeObjectURL(url); };
   img.src = url;
 });
 
+/* ============================
+   (MANTENGO ART INPUT igual — no es la fuente del freeze)
+   ============================ */
 artInput.addEventListener('change', (e) => {
   const f = e.target.files[0];
   if (!f) return;
@@ -315,12 +375,12 @@ downloadBtn.addEventListener('click', async () => {
   }
 });
 
-resetBtn.addEventListener('click', ()=>{
+resetBtn.addEventListener('click', ()=> {
   mockupImg = null; artImg = null;
   art = { x:100, y:150, w:300, h:300 };
   canvas.width = 800 * DPR;
   canvas.height = 1000 * DPR;
-  canvas.classList.add("canvas-fixed-size");
+  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
   draw();
 });
@@ -328,7 +388,7 @@ resetBtn.addEventListener('click', ()=>{
 (function init(){
   canvas.width = 800 * DPR;
   canvas.height = 1000 * DPR;
-  canvas.classList.add("canvas-fixed-size");
+  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
   draw();
 })();
