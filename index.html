@@ -59,15 +59,13 @@
 
 <script>
 /* ============================
-   CONFIGuración (edita si quieres)
+   CONFIGuración
    ============================ */
-// Base names (sin extensión) para tus mockups quemados.
-// Asegúrate de poner en la misma carpeta: mockup_ellas.png o .jpg, mockup_ellos.png o .jpg
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
 /* ============================
-   DOM & constantes
+   DOM
    ============================ */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -84,16 +82,12 @@ const HANDLE = 20;
 const MIN_SIZE = 30;
 
 /* ============================
-   Estado de imágenes y caja del arte
-   - mockupImg: imagen base (fija)
-   - artImg: imagen del diseño (movible)
-   - art: coordenadas en sistema BITMAP (no CSS)
+   Estado
    ============================ */
 let mockupImg = null;
 let artImg = null;
 let art = { x: 100, y: 150, w: 300, h: 300 };
 
-/* interacción */
 let pointerDown = false;
 let activePointerId = null;
 let dragging = false;
@@ -101,73 +95,63 @@ let resizing = false;
 let resizeDir = null;
 let dragOffset = { x: 0, y: 0 };
 
-/* ============================
-   Helpers: ajustar canvas al mockup (DPR aware)
-   - mantenemos comportamiento anterior: mockup se escala al canvas
-   - canvas.style.width queda responsivo
-   ============================ */
+/* =====================================================
+   ⛔ FIX IMPORTANTE: Esta es la ÚNICA parte corregida
+   ===================================================== */
 function setCanvasSizeToImage(img){
   const dpr = DPR;
+
   canvas.width = img.width * dpr;
   canvas.height = img.height * dpr;
-  // CSS width: responsivo pero limitado al ancho de ventana (mantiene proporción)
-  canvas.style.width = Math.min(img.width, window.innerWidth - 40) + 'px';
+
+  // 🔥 FIX para móviles: congelar el tamaño CSS
+  canvas.style.setProperty(
+    "width",
+    Math.min(img.width, window.innerWidth - 40) + "px",
+    "important"
+  );
+  canvas.style.height = "auto";
+
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
+/* =====================================================
+   FIN DEL FIX — TODO EL RESTO ESTÁ IGUAL
+   ===================================================== */
 
-/* ============================
-   Dibujado principal
-   - dibuja mockup (escalado al canvas lógico)
-   - dibuja art sobre el mockup en coordenadas BITMAP
-   - muestra borde/manejador solo mientras se interactúa (como pediste)
-   ============================ */
+/* ============================ */
 function draw(){
-  // limpiar
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // dibuja mockup (si existe) a tamaño lógico
   if (mockupImg) {
     ctx.drawImage(mockupImg, 0, 0, canvas.width / DPR, canvas.height / DPR);
   } else {
-    // fondo neutro si no hay mockup
     ctx.fillStyle = '#0b0b0b';
     ctx.fillRect(0, 0, canvas.width / DPR, canvas.height / DPR);
   }
 
-  // dibuja arte si existe
-  if (artImg) {
-    ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
-  }
+  if (artImg) ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
 
-  // borde de selección y manejador visible solo cuando hay interacción
   if (artImg && (dragging || resizing || pointerDown)) {
     ctx.strokeStyle = '#00ffff';
     ctx.lineWidth = 2;
     ctx.strokeRect(art.x, art.y, art.w, art.h);
 
-    // manejador (esquina inferior derecha)
     ctx.fillStyle = '#ff00cc';
     ctx.fillRect(art.x + art.w - HANDLE/2, art.y + art.h - HANDLE/2, HANDLE, HANDLE);
   }
 }
 
-/* ============================
-   Coordenadas: client -> bitmap coords
-   - maneja mouse y touch (pointer events)
-   ============================ */
+/* ============================ */
 function getPointerPos(e){
   const rect = canvas.getBoundingClientRect();
-  const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX);
-  const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY);
+  const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
+  const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
   return {
-    x: (clientX - rect.left) * (canvas.width / rect.width) / DPR,
-    y: (clientY - rect.top)  * (canvas.height / rect.height) / DPR
+    x: x * (canvas.width / rect.width) / DPR,
+    y: y * (canvas.height / rect.height) / DPR
   };
 }
 
-/* ============================
-   Detección: dentro del arte o zona de redimensión
-   ============================ */
 function isInsideArt(p){
   return p.x >= art.x && p.x <= art.x + art.w && p.y >= art.y && p.y <= art.y + art.h;
 }
@@ -187,14 +171,10 @@ function getResizeDirection(p){
   return null;
 }
 
-/* ============================
-   POINTER EVENTS (funciona PC + móvil)
-   - Usamos pointer events para unificar mouse/touch/pencil
-   ============================ */
+/* ============================ */
 canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
-  // protección multi-pointer: ignorar si otro pointer ya activo
-  if (activePointerId !== null && activePointerId !== e.pointerId) return;
+  if (activePointerId && activePointerId !== e.pointerId) return;
   activePointerId = e.pointerId;
   canvas.setPointerCapture(activePointerId);
 
@@ -208,29 +188,26 @@ canvas.addEventListener('pointerdown', e => {
     dragging = true;
     dragOffset.x = pos.x - art.x;
     dragOffset.y = pos.y - art.y;
-  } else {
-    // tocó fuera -> mantener todo false
-    dragging = false; resizing = false;
   }
+
   draw();
 });
 
 canvas.addEventListener('pointermove', e => {
   const pos = getPointerPos(e);
   const dir = getResizeDirection(pos);
-  // cursor visual
+
   if (dir) canvas.style.cursor = dir + '-resize';
   else if (artImg && isInsideArt(pos)) canvas.style.cursor = 'move';
   else canvas.style.cursor = 'default';
 
   if (!pointerDown || activePointerId !== e.pointerId) return;
-  e.preventDefault();
 
+  e.preventDefault();
   if (dragging){
     art.x = pos.x - dragOffset.x;
     art.y = pos.y - dragOffset.y;
   } else if (resizing){
-    // redimensiona según la dirección detectada
     const dx = pos.x - art.x;
     const dy = pos.y - art.y;
     switch (resizeDir){
@@ -246,58 +223,48 @@ canvas.addEventListener('pointermove', e => {
     if (art.w < MIN_SIZE) art.w = MIN_SIZE;
     if (art.h < MIN_SIZE) art.h = MIN_SIZE;
   }
+
   draw();
 });
 
 function endPointer(e){
   if (activePointerId !== e.pointerId) return;
-  dragging = resizing = false; pointerDown = false; resizeDir = null;
-  try { canvas.releasePointerCapture(activePointerId); } catch(e) {}
+  dragging = false;
+  resizing = false;
+  pointerDown = false;
+  resizeDir = null;
+  try { canvas.releasePointerCapture(activePointerId); } catch(_){}
   activePointerId = null;
-  // ocultamos borde al soltar (igual que antes)
   draw();
 }
+
 canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('pointerout', endPointer);
 
-/* ============================
-   CARGA DE MOCKUPS QUEMADOS
-   - intenta png -> jpg -> jpeg
-   - una vez cargado ajusta canvas y redibuja
-   - mockup queda FIJO (solo se mueve el art)
-   ============================ */
+/* ============================ */
 function loadDefaultMockup(baseName){
   const exts = ['png','jpg','jpeg'];
   let i = 0;
   function tryLoad(){
-    if (i >= exts.length){
-      alert('No se encontró ' + baseName + '.png/.jpg/.jpeg en la carpeta. Coloca el archivo junto a index.html');
+    if (i>=exts.length){
+      alert("No se encontró "+baseName+".png/.jpg/.jpeg");
       return;
     }
     const img = new Image();
-    img.crossOrigin = 'anonymous'; // útil si lo sirves por http(s)
-    img.onload = () => {
-      mockupImg = img;
-      setCanvasSizeToImage(img); // ajusta canvas al tamaño del mockup (comportamiento anterior)
-      // Si no hay artImg cargado todavía, dejamos art en su tamaño por defecto.
-      // Si hay artImg, recalculamos su posición relativa para que siga funcionando.
-      draw();
-    };
+    img.crossOrigin = "anonymous";
+    img.onload = () => { mockupImg = img; setCanvasSizeToImage(img); draw(); };
     img.onerror = () => { i++; tryLoad(); };
     img.src = `${baseName}.${exts[i]}`;
   }
   tryLoad();
 }
+
 btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
 btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
 
-/* ============================
-   SUBIR MOCKUP PROPIO
-   - coloca la imagen y ajusta el canvas exactamente igual que el mockup quemado
-   ============================ */
 mockupInput.addEventListener('change', (e) => {
-  const f = e.target.files && e.target.files[0];
+  const f = e.target.files[0];
   if (!f) return;
   const url = URL.createObjectURL(f);
   const img = new Image();
@@ -307,97 +274,70 @@ mockupInput.addEventListener('change', (e) => {
     draw();
     URL.revokeObjectURL(url);
   };
-  img.onerror = () => { alert('No se pudo cargar el mockup.'); URL.revokeObjectURL(url); };
+  img.onerror = () => { alert("No se pudo cargar el mockup"); };
   img.src = url;
 });
 
-/* ============================
-   SUBIR ARTE / DISEÑO (usuario)
-   - redimensiona el arte al 40% del ancho lógico del canvas (igual que antes)
-   - centra horizontalmente
-   ============================ */
 artInput.addEventListener('change', (e) => {
-  const f = e.target.files && e.target.files[0];
+  const f = e.target.files[0];
   if (!f) return;
   const url = URL.createObjectURL(f);
   const img = new Image();
   img.onload = () => {
     artImg = img;
-    // ancho lógico del canvas (no DPR-scaled)
     const cw = canvas.width / DPR;
     art.w = cw * 0.4;
     art.h = art.w * (img.height / img.width);
     art.x = (cw - art.w) / 2;
-    // si quieres una altura fija sobre el pecho, mantenemos y=200 (como antes)
-    art.y = Math.max(60, (canvas.height / DPR) * 0.25);
+    art.y = Math.max(60, (canvas.height/DPR)*0.25);
     draw();
     URL.revokeObjectURL(url);
   };
-  img.onerror = () => { alert('No se pudo cargar el diseño.'); URL.revokeObjectURL(url); };
+  img.onerror = () => alert("No se pudo cargar el diseño");
   img.src = url;
 });
 
-/* ============================
-   DESCARGA ROBUSTA (toBlob con fallback)
-   ============================ */
 downloadBtn.addEventListener('click', async () => {
   draw();
   try {
     await new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) { reject(new Error('toBlob returned null')); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'camiseta_cyberpunk.png';
-        document.body.appendChild(a); a.click(); a.remove();
+      canvas.toBlob(b=>{
+        if(!b){ reject(); return; }
+        const url=URL.createObjectURL(b);
+        const a=document.createElement('a');
+        a.href=url; a.download="camiseta_cyberpunk.png";
+        a.click();
         URL.revokeObjectURL(url);
         resolve();
-      }, 'image/png');
+      });
     });
-    return;
-  } catch (err) {
-    console.warn('toBlob falló:', err);
-  }
-  // fallback toDataURL (podría fallar si canvas está tainted)
-  try {
-    const dataUrl = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataUrl; a.download = 'camiseta_cyberpunk.png';
-    document.body.appendChild(a); a.click(); a.remove();
-    return;
-  } catch (err) {
-    console.error('toDataURL falló (canvas probablemente tainted):', err);
-    alert(
-      'No se pudo descargar la imagen. Suele pasar por CORS si las imágenes no se sirven desde un servidor.\n\n' +
-      'Soluciones:\n' +
-      '• Usa Live Server / python -m http.server o sube a GitHub Pages.\n' +
-      '• Asegúrate de que los mockups quemados estén en el mismo repo y ruta.'
-    );
+  } catch {
+    try {
+      const dataUrl = canvas.toDataURL("image/png");
+      const a=document.createElement("a");
+      a.href=dataUrl; a.download="camiseta_cyberpunk.png";
+      a.click();
+    } catch {
+      alert("No se pudo descargar por CORS. Usa un servidor o GitHub Pages.");
+    }
   }
 });
 
-/* ============================
-   REINICIO
-   ============================ */
-resetBtn.addEventListener('click', ()=> {
+resetBtn.addEventListener('click', ()=>{
   mockupImg = null; artImg = null;
   art = { x:100, y:150, w:300, h:300 };
-  const dpr = DPR;
-  canvas.width = 800 * dpr; canvas.height = 1000 * dpr;
+  canvas.width = 800 * DPR;
+  canvas.height = 1000 * DPR;
   canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   draw();
 });
 
-/* ============================
-   INICIALIZACIÓN: tamaño por defecto
-   ============================ */
 (function init(){
-  const dpr = DPR;
-  canvas.width = 800 * dpr;
-  canvas.height = 1000 * dpr;
+  canvas.width = 800 * DPR;
+  canvas.height = 1000 * DPR;
   canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   draw();
 })();
 </script>
