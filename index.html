@@ -4,142 +4,200 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Diseñador de Camisetas</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- ========== FUENTES (Google Fonts) ========== 
+     Incluyo todas las fuentes que pediste. Puedes quitar las que no quieras.
+     Nota: cargar muchas fuentes puede tardar algo la primera vez; son necesarias
+     para que el selector muestre y use las familias.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Bebas+Neue&family=Montserrat:wght@400;700&family=Roboto:wght@400;700&family=Anton&family=Teko:wght@400;600&family=Russo+One&family=Audiowide&family=Oxanium:wght@400;700&family=Rajdhani:wght@400;700&family=Chakra+Petch&display=swap" rel="stylesheet">
 
 <style>
+/* ========== ESTILOS VISUALES ========== */
+/* Variables de color */
 :root{
-    --neon1:#ff00cc;
-    --neon2:#00e5ff;
-    --bg:#04040a;
+  --neon1:#ff00cc;
+  --neon2:#00e5ff;
+  --bg:#04040a;
 }
-*{box-sizing:border-box}
+
+/* Reset y layout */
+*{ box-sizing:border-box; }
 body{
-    margin:0;
-    min-height:100vh;
-    background:radial-gradient(circle at top left,var(--bg),#0b0b12);
-    color:#fff;
-    font-family:'Orbitron',sans-serif;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:12px;
-    padding:12px;
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top left,var(--bg),#0b0b12);
+  color:#fff;
+  font-family:'Orbitron',sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  padding:12px;
 }
+
 header{
-    width:100%;
-    text-align:center;
-    padding:14px;
-    background:linear-gradient(90deg,var(--neon1),var(--neon2));
-    box-shadow:0 6px 30px rgba(0,0,0,0.4);
-    border-radius:8px;
-    font-size:1.2rem;
+  width:100%;
+  text-align:center;
+  padding:14px;
+  background:linear-gradient(90deg,var(--neon1),var(--neon2));
+  box-shadow:0 6px 30px rgba(0,0,0,0.4);
+  border-radius:8px;
+  font-size:1.2rem;
 }
+
 .controls{
-    width:100%;
-    max-width:1000px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    justify-content:center;
-    align-items:center;
-    padding:8px;
+  width:100%;
+  max-width:1100px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  align-items:center;
+  padding:8px;
 }
-.controls > * { min-width:120px; }
-button, .file-label{
-    background: linear-gradient(90deg,var(--neon1),var(--neon2));
-    color:#000;
-    border:none;
-    padding:10px 14px;
-    border-radius:10px;
-    cursor:pointer;
-    font-weight:700;
-    box-shadow:0 8px 20px rgba(0,0,0,0.35);
-    text-align:center;
+.controls > *{ min-width:120px; }
+
+/* Botones y etiquetas */
+button, .file-label, select, input[type="color"], input[type="range"]{
+  background: linear-gradient(90deg,var(--neon1),var(--neon2));
+  color:#000;
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+  box-shadow:0 8px 20px rgba(0,0,0,0.35);
+  text-align:center;
 }
+
+/* Archivos invisibles (inputs file) */
 input[type="file"]{ display:none; }
 .file-label{ display:inline-block; }
+
+/* canvas wrapper */
 .canvas-wrap{
-    width:100%;
-    max-width:900px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+  width:100%;
+  max-width:900px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 canvas{
-    width:100%;
-    height:auto;
-    max-height:78vh;
-    border-radius:12px;
-    border:2px solid rgba(0,229,255,0.12);
-    box-shadow:0 10px 40px rgba(0,0,0,0.6);
-    background:#0b0b0b;
-    touch-action:none;
+  width:100%;
+  height:auto;
+  max-height:78vh;
+  border-radius:12px;
+  border:2px solid rgba(0,229,255,0.12);
+  box-shadow:0 10px 40px rgba(0,0,0,0.6);
+  background:#0b0b0b;
+  touch-action:none; /* evita scroll/gestos inconsistentes */
 }
-.hint{
-    color:#cfe9ff88;
-    font-size:0.9rem;
-    text-align:center;
-    max-width:900px;
-}
+
+/* texto + inputs (estéticos) */
 #textInput{
-    min-width:160px;
-    padding:8px 10px;
-    border-radius:8px;
-    border:2px solid rgba(0,229,255,0.12);
-    background:#0b0b0b;
-    color:#00e5ff;
-    font-weight:700;
+  min-width:180px;
+  padding:8px 10px;
+  border-radius:8px;
+  border:2px solid rgba(0,229,255,0.12);
+  background:#0b0b0b;
+  color:#00e5ff;
+  font-weight:700;
 }
-#textColor{
-    min-width:120px;
-    padding:8px;
-    border-radius:8px;
-    border:2px solid rgba(0,229,255,0.12);
-    background:#111;
-    color:#00e5ff;
+#textColor{ min-width:120px; padding:8px; border-radius:8px; border:2px solid rgba(0,229,255,0.12); background:#111; color:#00e5ff; }
+#fontSelect{ min-width:140px; padding:8px; border-radius:8px; border:2px solid rgba(0,229,255,0.12); background:#111; color:#00e5ff; }
+
+/* slider estilo sencillo (size) */
+#textSizeRange{ width:140px; background:transparent; }
+
+/* hint */
+.hint{
+  color:#cfe9ff88;
+  font-size:0.9rem;
+  text-align:center;
+  max-width:900px;
 }
+
+/* responsive */
 @media (max-width:540px){
-    .controls > * { min-width:48%; }
-    .controls { gap:8px; }
+  .controls > *{ min-width:48%; }
+  .controls{ gap:8px; }
 }
 </style>
 </head>
 
 <body>
-
 <header>👕 Diseñador — Personaliza tu Camiseta</header>
 
-<!-- Precarga silenciosa (evita congelamiento móvil) -->
+<!-- Precarga silenciosa para mockups quemados (evita congelamiento móvil) -->
 <div style="opacity:0; height:0; overflow:hidden;">
-    <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
-    <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
+  <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
+  <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
 </div>
 
+<!-- ========== CONTROLES ========== 
+     Mantengo los controles originales y agrego:
+     - selector de fuente
+     - boton añadir texto
+     - slider de tamaño (facilita redim en móvil)
+     - eliminar texto seleccionado
+-->
 <div class="controls">
-    <button id="btnEllas">👚 Ellas</button>
-    <button id="btnEllos">👕 Ellos</button>
+  <button id="btnEllas">👚 Ellas</button>
+  <button id="btnEllos">👕 Ellos</button>
 
-    <label class="file-label" for="mockupInput">📤 Subir mockup</label>
-    <input id="mockupInput" type="file" accept="image/*">
+  <label class="file-label" for="mockupInput">📤 Subir mockup</label>
+  <input id="mockupInput" type="file" accept="image/*">
 
-    <label class="file-label" for="artInput">🖼️ Subir diseño</label>
-    <input id="artInput" type="file" accept="image/*">
+  <label class="file-label" for="artInput">🖼️ Subir diseño</label>
+  <input id="artInput" type="file" accept="image/*">
 
-    <input id="textInput" type="text" placeholder="✏️ Escribe texto...">
-    <input id="textColor" type="color" value="#00e5ff">
+  <!-- Texto: editar el texto seleccionado -->
+  <input id="textInput" type="text" placeholder="✏️ Escribe texto...">
+  <select id="fontSelect" title="Fuente">
+    <!-- Opciones añadidas (coincide con Google Fonts arriba) -->
+    <option value="Orbitron">Orbitron</option>
+    <option value="Bebas Neue">Bebas Neue</option>
+    <option value="Montserrat">Montserrat</option>
+    <option value="Roboto">Roboto</option>
+    <option value="Anton">Anton</option>
+    <option value="Teko">Teko</option>
+    <option value="Russo One">Russo One</option>
+    <option value="Audiowide">Audiowide</option>
+    <option value="Oxanium">Oxanium</option>
+    <option value="Rajdhani">Rajdhani</option>
+    <option value="Chakra Petch">Chakra Petch</option>
+  </select>
 
-    <button id="downloadBtn">⬇️ Descargar PNG</button>
-    <button id="resetBtn">↺ Reiniciar</button>
+  <input id="textColor" type="color" value="#00e5ff" title="Color del texto">
+
+  <!-- helpers para texto: añadir, tamaño, eliminar -->
+  <button id="addTextBtn">➕ Añadir texto</button>
+  <input id="textSizeRange" type="range" min="12" max="240" value="48" title="Tamaño del texto">
+  <button id="deleteTextBtn">🗑️ Eliminar texto</button>
+
+  <button id="downloadBtn">⬇️ Descargar PNG</button>
+  <button id="resetBtn">↺ Reiniciar</button>
 </div>
 
-<div class="canvas-wrap">
-    <canvas id="canvas"></canvas>
-</div>
-
-<div class="hint">Toca/arrastra para mover. Arrastra bordes para redimensionar. Compatible PC y móvil.</div>
+<div class="canvas-wrap"><canvas id="canvas"></canvas></div>
+<div class="hint">Toca/arrastra para mover. Usa el manejador o el slider para redimensionar texto. Selecciona texto para editar su contenido, color y fuente. Compatible PC y móvil.</div>
 
 <script>
-/* ========================= DOM & CONFIG ========================= */
+/* =================================================================================
+   Código JavaScript con comentarios EXHAUSTIVOS para que puedas entender/editar
+   =================================================================================
+   Objetivos principales:
+   - mantener todas las funcionalidades previas
+   - arreglar redimensionado de texto en móvil (handler + slider)
+   - permitir múltiples textos independientes
+   - permitir múltiples fuentes y selección por texto
+   - no tocar comportamiento del resto (mockups, arte, descarga, etc.)
+*/
+
+/* =========================
+   CONFIG / DOM
+   ========================= */
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
@@ -150,457 +208,642 @@ const btnEllas = document.getElementById('btnEllas');
 const btnEllos = document.getElementById('btnEllos');
 const mockupInput = document.getElementById('mockupInput');
 const artInput = document.getElementById('artInput');
+
 const textInput = document.getElementById('textInput');
+const fontSelect = document.getElementById('fontSelect');
 const textColor = document.getElementById('textColor');
+const addTextBtn = document.getElementById('addTextBtn');
+const textSizeRange = document.getElementById('textSizeRange');
+const deleteTextBtn = document.getElementById('deleteTextBtn');
+
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const DPR = window.devicePixelRatio || 1;
-const HANDLE = 18;
+
+/* HANDLE: zona visual para detectar resizing (usada para arte y texto).
+   HAGO dos tamaños: ART_HANDLE más pequeño, TEXT_HANDLE más grande para tocadores.
+*/
+const ART_HANDLE = 18;
+const TEXT_HANDLE = 28; // ampliado para facilitar toque en móvil
 const MIN_SIZE = 30;
 
-/* ========================= ESTADO ========================= */
+/* =========================
+   ESTADO GLOBAL
+   ========================= */
+
+/* mockupImg y artImg funcionan igual que antes */
 let mockupImg = null;
 let artImg = null;
-
 let art = { x:100, y:150, w:300, h:300 };
 
+/* punteros y estados para arte/manejo */
 let pointerDown = false;
 let activePointerId = null;
+
 let dragging = false;
 let resizing = false;
 let resizeDir = null;
 let dragOffset = { x:0, y:0 };
 
-/* TEXTO */
-let textObj = {
-    value:'',
-    x:120,
-    y:480,
-    size:140,
-    color:'#00e5ff',
-    baseline:'top'
-};
+/* ======= Texto: ahora manejamos un array de textos (múltiples textos independientes) =======
+   Cada texto es un objeto:
+   { id, value, x, y, size, color, font, baseline, selected (bool) }
+   - id: identificador único
+   - selected: si el texto está activo/seleccionado para editar
+*/
+let texts = []; // lista de textos
+let nextTextId = 1; // contador para IDs únicos
+
+/* estados para manipulación de textos */
 let draggingText = false;
 let resizingText = false;
 let textResizeStart = null;
+let selectedTextId = null; // id del texto seleccionado (si lo hay)
 
-/* ========================= OPTIMIZACIÓN ========================= */
+/* =========================
+   FUNCIONES AUXILIARES / UTIL
+   ========================= */
+
+/**
+ * optimizeImage(img, maxSize)
+ * - Reduce imágenes muy grandes dibujándolas a un canvas temporal y devolviendo
+ *   un nuevo Image con dataURL (JPEG para reducir peso). Mantiene aspecto.
+ * - Esto ayuda a evitar OOM / congelamiento en móviles con fotos enormes.
+ */
 function optimizeImage(img, maxSize = 2048){
-    return new Promise(resolve=>{
-        if(img.width <= maxSize && img.height <= maxSize){
-            resolve(img); return;
-        }
-        const scale = maxSize / Math.max(img.width, img.height);
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-
-        const buf = document.createElement('canvas');
-        buf.width = w; buf.height = h;
-
-        const bctx = buf.getContext('2d');
-        bctx.drawImage(img,0,0,w,h);
-
-        const out = new Image();
-        out.onload = ()=> resolve(out);
-        out.src = buf.toDataURL('image/jpeg',0.9);
-    });
+  return new Promise(resolve=>{
+    if(img.width <= maxSize && img.height <= maxSize){ resolve(img); return; }
+    const scale = maxSize / Math.max(img.width, img.height);
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const buf = document.createElement('canvas');
+    buf.width = w; buf.height = h;
+    const bctx = buf.getContext('2d');
+    bctx.drawImage(img, 0, 0, w, h);
+    const out = new Image();
+    out.onload = ()=> resolve(out);
+    out.src = buf.toDataURL('image/jpeg', 0.9);
+  });
 }
 
-/* ========================= CANVAS SIZE ========================= */
+/**
+ * setCanvasSizeToImage(img)
+ * - Ajusta el canvas para que su tamaño lógico (width/height) cuadre con la
+ *   resolución de la imagen, y mantiene CSS width responsive para móviles.
+ * - Ajusta la transform del contexto para respetar DPR.
+ */
 function setCanvasSizeToImage(img){
-    canvas.width = img.width * DPR;
-    canvas.height = img.height * DPR;
-
-    canvas.style.width = Math.min(img.width, window.innerWidth - 40) + "px";
-    canvas.style.height = "auto";
-
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+  canvas.width = img.width * DPR;
+  canvas.height = img.height * DPR;
+  canvas.style.width = Math.min(img.width, window.innerWidth - 40) + "px";
+  canvas.style.height = "auto";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
-/* ========================= DIBUJO ========================= */
+/* =========================
+   DIBUJADO PRINCIPAL
+   - Dibuja: fondo (mockup), arte, textos (todos), y manejadores si corresponde.
+*/
 function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+  // limpiar canvas lógico
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    if(mockupImg){
-        ctx.drawImage(mockupImg,0,0,canvas.width/DPR,canvas.height/DPR);
-    } else {
-        ctx.fillStyle="#0b0b0b";
-        ctx.fillRect(0,0,canvas.width/DPR,canvas.height/DPR);
+  // fondo/mockup
+  if(mockupImg){
+    ctx.drawImage(mockupImg, 0, 0, canvas.width / DPR, canvas.height / DPR);
+  } else {
+    ctx.fillStyle = "#0b0b0b";
+    ctx.fillRect(0,0,canvas.width / DPR, canvas.height / DPR);
+  }
+
+  // arte (imagen cargada)
+  if(artImg){
+    ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
+  }
+
+  // si interactuando con arte -> dibujar borde y manejadores (igual que antes)
+  if(artImg && (dragging || resizing || pointerDown)){
+    ctx.strokeStyle = "#00ffff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(art.x, art.y, art.w, art.h);
+
+    ctx.fillStyle = "#ff00cc";
+    const hs = ART_HANDLE;
+    const corners = [
+      [art.x, art.y],
+      [art.x + art.w, art.y],
+      [art.x, art.y + art.h],
+      [art.x + art.w, art.y + art.h]
+    ];
+    corners.forEach(c => ctx.fillRect(c[0]-hs/2, c[1]-hs/2, hs, hs));
+    // lados
+    ctx.fillRect(art.x + art.w/2 - hs/2, art.y - hs/2, hs, hs);
+    ctx.fillRect(art.x + art.w/2 - hs/2, art.y + art.h - hs/2, hs, hs);
+    ctx.fillRect(art.x - hs/2, art.y + art.h/2 - hs/2, hs, hs);
+    ctx.fillRect(art.x + art.w - hs/2, art.y + art.h/2 - hs/2, hs, hs);
+  }
+
+  // TEXTOS: dibujamos TODOS los textos del array. El orden en pantalla sigue el orden del array.
+  texts.forEach(t => {
+    // establecer font: "<size>px <font>"
+    ctx.font = `${t.size}px "${t.font}", sans-serif`;
+    ctx.fillStyle = t.color;
+    ctx.textBaseline = t.baseline || 'top';
+    ctx.fillText(t.value, t.x, t.y);
+
+    // si el texto está seleccionado o si estamos en pointerDown -> mostrar caja + handle
+    if((t.id === selectedTextId && (draggingText || resizingText || pointerDown)) || t.id === selectedTextId){
+      // medimos ancho con la font actual
+      const tw = ctx.measureText(t.value).width;
+      const th = t.size; // aproximación de altura por tamaño de font
+      ctx.strokeStyle = "#00ffff";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(t.x, t.y, tw, th);
+
+      // handle grande para facilitar toque
+      ctx.fillStyle = "#ff00cc";
+      ctx.fillRect(t.x + tw - TEXT_HANDLE/2, t.y + th - TEXT_HANDLE/2, TEXT_HANDLE, TEXT_HANDLE);
     }
-
-    if(artImg){
-        ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
-    }
-
-    /* Selección arte */
-    if(artImg && (dragging || resizing || pointerDown)){
-        ctx.strokeStyle="#00ffff";
-        ctx.lineWidth=2;
-        ctx.strokeRect(art.x, art.y, art.w, art.h);
-
-        ctx.fillStyle="#ff00cc";
-        const hs = HANDLE;
-
-        const corners = [
-            [art.x, art.y],
-            [art.x + art.w, art.y],
-            [art.x, art.y + art.h],
-            [art.x + art.w, art.y + art.h]
-        ];
-        corners.forEach(c => ctx.fillRect(c[0]-hs/2, c[1]-hs/2, hs, hs));
-
-        ctx.fillRect(art.x + art.w/2 - hs/2, art.y - hs/2, hs, hs);
-        ctx.fillRect(art.x + art.w/2 - hs/2, art.y + art.h - hs/2, hs, hs);
-        ctx.fillRect(art.x - hs/2, art.y + art.h/2 - hs/2, hs, hs);
-        ctx.fillRect(art.x + art.w - hs/2, art.y + art.h/2 - hs/2, hs, hs);
-    }
-
-    /* TEXTO */
-    if(textObj.value){
-        ctx.font = `${textObj.size}px Orbitron`;
-        ctx.fillStyle = textObj.color;
-        ctx.textBaseline = textObj.baseline;
-        ctx.fillText(textObj.value, textObj.x, textObj.y);
-    }
-
-    /* Selección texto */
-    if((draggingText || resizingText || pointerDown) && textObj.value){
-        ctx.font = `${textObj.size}px Orbitron`;
-        const tw = ctx.measureText(textObj.value).width;
-        const th = textObj.size;
-
-        ctx.strokeStyle="#00ffff";
-        ctx.strokeRect(textObj.x, textObj.y, tw, th);
-
-        ctx.fillStyle="#ff00cc";
-        ctx.fillRect(textObj.x + tw - HANDLE/2, textObj.y + th - HANDLE/2, HANDLE, HANDLE);
-    }
+  });
 }
 
-/* ========================= COORDENADAS ========================= */
+/* =========================
+   COORDENADAS: cliente -> coordenadas del bitmap (DPR aware)
+   - Devuelve {x, y} en espacio lógico del canvas (pixels en la escala usada para dibujar).
+*/
 function getPointerPos(e){
-    const rect = canvas.getBoundingClientRect();
-    const cx = e.clientX ?? e.touches?.[0]?.clientX;
-    const cy = e.clientY ?? e.touches?.[0]?.clientY;
-    return {
-        x:(cx - rect.left) * (canvas.width / rect.width) / DPR,
-        y:(cy - rect.top) * (canvas.height / rect.height) / DPR
-    };
+  const rect = canvas.getBoundingClientRect();
+  // soporta mouse y touch
+  const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX);
+  const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY);
+  return {
+    x: (clientX - rect.left) * (canvas.width / rect.width) / DPR,
+    y: (clientY - rect.top) * (canvas.height / rect.height) / DPR
+  };
 }
 
-/* ========================= HIT TEST ========================= */
-function pointInRect(p, x,y,w,h){
-    return p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h;
+/* =========================
+   HIT TEST / DETECCIÓN
+   - Para soportar multiples textos: implementamos funciones que
+     chequean cada texto (en orden inverso para seleccionar el texto superior)
+*/
+
+/* test punto dentro rect */
+function pointInRect(p, rx, ry, rw, rh){
+  return p.x >= rx && p.x <= rx + rw && p.y >= ry && p.y <= ry + rh;
 }
+
+/* Detección handles para arte (igual que antes) */
 function getArtResizeDir(p){
-    const nearL = Math.abs(p.x - art.x) < HANDLE;
-    const nearR = Math.abs(p.x - (art.x+art.w)) < HANDLE;
-    const nearT = Math.abs(p.y - art.y) < HANDLE;
-    const nearB = Math.abs(p.y - (art.y+art.h)) < HANDLE;
-
-    if(nearT && nearL) return "nw";
-    if(nearT && nearR) return "ne";
-    if(nearB && nearL) return "sw";
-    if(nearB && nearR) return "se";
-    if(nearT) return "n";
-    if(nearB) return "s";
-    if(nearL) return "w";
-    if(nearR) return "e";
-    return null;
-}
-function pointOnTextHandle(p){
-    if(!textObj.value) return false;
-
-    ctx.font = `${textObj.size}px Orbitron`;
-    const tw = ctx.measureText(textObj.value).width;
-    const th = textObj.size;
-
-    return pointInRect(
-        p,
-        textObj.x + tw - HANDLE/2,
-        textObj.y + th - HANDLE/2,
-        HANDLE, HANDLE
-    );
-}
-function pointInText(p){
-    if(!textObj.value) return false;
-
-    ctx.font = `${textObj.size}px Orbitron`;
-    const tw = ctx.measureText(textObj.value).width;
-    const th = textObj.size;
-
-    return pointInRect(p, textObj.x, textObj.y, tw, th);
+  const nearLeft = Math.abs(p.x - art.x) < ART_HANDLE;
+  const nearRight = Math.abs(p.x - (art.x + art.w)) < ART_HANDLE;
+  const nearTop = Math.abs(p.y - art.y) < ART_HANDLE;
+  const nearBottom = Math.abs(p.y - (art.y + art.h)) < ART_HANDLE;
+  if (nearTop && nearLeft) return 'nw';
+  if (nearTop && nearRight) return 'ne';
+  if (nearBottom && nearLeft) return 'sw';
+  if (nearBottom && nearRight) return 'se';
+  if (nearTop) return 'n';
+  if (nearBottom) return 's';
+  if (nearLeft) return 'w';
+  if (nearRight) return 'e';
+  return null;
 }
 
-/* ========================= POINTER EVENTS ========================= */
-canvas.addEventListener("pointerdown", e=>{
-    e.preventDefault();
+/* Detección handle de texto: dado un texto, devuelve true si el punto está en su handle (bottom-right) */
+function pointOnTextHandleFor(t, p){
+  if(!t.value) return false;
+  ctx.font = `${t.size}px "${t.font}", sans-serif`;
+  const tw = ctx.measureText(t.value).width;
+  const th = t.size;
+  return pointInRect(p, t.x + tw - TEXT_HANDLE/2, t.y + th - TEXT_HANDLE/2, TEXT_HANDLE, TEXT_HANDLE);
+}
 
-    if(activePointerId !== null && activePointerId !== e.pointerId) return;
-    activePointerId = e.pointerId;
-    canvas.setPointerCapture(activePointerId);
-    pointerDown = true;
+/* Detección si punto dentro de texto (rect aproximado) */
+function pointInTextFor(t, p){
+  if(!t.value) return false;
+  ctx.font = `${t.size}px "${t.font}", sans-serif`;
+  const tw = ctx.measureText(t.value).width;
+  const th = t.size;
+  return pointInRect(p, t.x, t.y, tw, th);
+}
 
-    const p = getPointerPos(e);
+/* Seleccionar texto superior en el punto p
+   - recorremos texts en orden inverso (último dibujado arriba)
+*/
+function findTextAtPoint(p){
+  for(let i = texts.length - 1; i >= 0; i--){
+    const t = texts[i];
+    if(pointInTextFor(t, p)) return t;
+  }
+  return null;
+}
 
-    if(pointOnTextHandle(p)){
-        resizingText = true;
-        textResizeStart = { px:p.x, py:p.y, size:textObj.size };
-        return;
-    }
+/* findTextHandleAtPoint: devuelve texto cuyo handle contiene p (para resize)
+   - también en orden inverso para priorizar textos dibujados arriba
+*/
+function findTextHandleAtPoint(p){
+  for(let i = texts.length - 1; i >= 0; i--){
+    const t = texts[i];
+    if(pointOnTextHandleFor(t, p)) return t;
+  }
+  return null;
+}
 
-    if(pointInText(p)){
-        draggingText = true;
-        textObj.offsetX = p.x - textObj.x;
-        textObj.offsetY = p.y - textObj.y;
-        draw();
-        return;
-    }
+/* =========================
+   GESTIÓN DE SELECCIÓN Y UI (sincroniza controles con texto seleccionado)
+*/
+function selectTextById(id){
+  selectedTextId = id;
+  // actualizar inputs (texto, color, font, size)
+  const t = texts.find(x => x.id === id);
+  if(t){
+    textInput.value = t.value;
+    textColor.value = t.color;
+    fontSelect.value = t.font;
+    textSizeRange.value = t.size;
+  }
+  draw();
+}
 
-    const dir = getArtResizeDir(p);
-    if(artImg && dir){
-        resizing = true;
-        resizeDir = dir;
-        return;
-    }
+function deselectText(){
+  selectedTextId = null;
+  // dejar inputs como están (usuario puede escribir para cuando añada)
+  draw();
+}
 
-    if(artImg && pointInRect(p, art.x, art.y, art.w, art.h)){
-        dragging = true;
-        dragOffset = { x:p.x-art.x, y:p.y-art.y };
-        draw();
-        return;
-    }
+/* =========================
+   EVENTOS POINTER (canvas)
+   - Unificamos mouse/touch con pointer events como antes.
+   - Lógica: priorizar handles de texto (resize), luego selección/drag texto, luego handles arte, luego drag arte.
+*/
+canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
 
+  // multi-pointer safety
+  if(activePointerId !== null && activePointerId !== e.pointerId) return;
+  activePointerId = e.pointerId;
+  canvas.setPointerCapture(activePointerId);
+  pointerDown = true;
+
+  const p = getPointerPos(e);
+
+  // 1) ¿clicó handle de texto (para redim)?
+  const th = findTextHandleAtPoint(p);
+  if(th){
+    selectedTextId = th.id;
+    resizingText = true;
+    textResizeStart = { px: p.x, py: p.y, size: th.size };
+    // sync UI
+    selectTextById(th.id);
+    return;
+  }
+
+  // 2) ¿clicó dentro de algún texto? -> arrastrar texto
+  const tHit = findTextAtPoint(p);
+  if(tHit){
+    selectedTextId = tHit.id;
+    draggingText = true;
+    // offset para arrastrar desde el punto de contacto
+    tHit._offsetX = p.x - tHit.x;
+    tHit._offsetY = p.y - tHit.y;
+    selectTextById(tHit.id);
     draw();
+    return;
+  }
+
+  // 3) ¿clicó handle de arte? (resize arte)
+  const artDir = getArtResizeDir(p);
+  if(artImg && artDir){
+    resizing = true;
+    resizeDir = artDir;
+    // deseleccionar texto al manipular arte
+    deselectText();
+    return;
+  }
+
+  // 4) ¿clicó dentro del arte? -> arrastrar arte
+  if(artImg && pointInRect(p, art.x, art.y, art.w, art.h)){
+    dragging = true;
+    dragOffset.x = p.x - art.x;
+    dragOffset.y = p.y - art.y;
+    // deseleccionar texto al manipular arte
+    deselectText();
+    draw();
+    return;
+  }
+
+  // 5) clic fuera -> deseleccionar cualquier texto
+  deselectText();
+  draw();
 });
 
-canvas.addEventListener("pointermove", e=>{
-    const p = getPointerPos(e);
+canvas.addEventListener('pointermove', (e) => {
+  const p = getPointerPos(e);
 
-    if(artImg){
-        const dir = getArtResizeDir(p);
-        if(dir) canvas.style.cursor = dir+"-resize";
-        else if(pointInRect(p, art.x, art.y, art.w, art.h)) canvas.style.cursor="move";
-        else canvas.style.cursor="default";
+  // cursor hints: prioridad arte then text
+  // - check art resize
+  if(artImg){
+    const artDir = getArtResizeDir(p);
+    if(artDir) { canvas.style.cursor = artDir + '-resize'; }
+    else {
+      // check if over any text bounding box (last-first)
+      const tCheck = findTextAtPoint(p);
+      if(tCheck) canvas.style.cursor = 'move';
+      else if(pointInRect(p, art.x, art.y, art.w, art.h)) canvas.style.cursor = 'move';
+      else canvas.style.cursor = 'default';
     }
+  } else {
+    const tCheck = findTextAtPoint(p);
+    canvas.style.cursor = tCheck ? 'move' : 'default';
+  }
 
-    if(!pointerDown || activePointerId !== e.pointerId) return;
-    e.preventDefault();
+  if(!pointerDown || activePointerId !== e.pointerId) return;
+  e.preventDefault();
 
-    if(draggingText){
-        textObj.x = p.x - textObj.offsetX;
-        textObj.y = p.y - textObj.offsetY;
-        draw(); return;
+  // 1) dragging text
+  if(draggingText){
+    const t = texts.find(x => x.id === selectedTextId);
+    if(t){
+      t.x = p.x - t._offsetX;
+      t.y = p.y - t._offsetY;
+      draw();
     }
+    return;
+  }
 
-    if(resizingText && textResizeStart){
-        const dx = p.x - textResizeStart.px;
-        textObj.size = Math.max(12, Math.round(textResizeStart.size + dx*0.2));
-        draw(); return;
+  // 2) resizing text
+  if(resizingText && textResizeStart){
+    const t = texts.find(x => x.id === selectedTextId);
+    if(t){
+      const dx = p.x - textResizeStart.px;
+      // factor de escala: mayor sensibilidad en desktop, pero *también* usamos slider
+      const newSize = Math.max(12, Math.round(textResizeStart.size + dx * 0.25));
+      t.size = newSize;
+      // actualizar slider para feedback inmediato
+      textSizeRange.value = t.size;
+      draw();
     }
+    return;
+  }
 
-    if(dragging){
-        art.x = p.x - dragOffset.x;
-        art.y = p.y - dragOffset.y;
-        draw(); return;
+  // 3) dragging art
+  if(dragging){
+    art.x = p.x - dragOffset.x;
+    art.y = p.y - dragOffset.y;
+    draw();
+    return;
+  }
+
+  // 4) resizing art
+  if(resizing){
+    const dx = p.x - art.x;
+    const dy = p.y - art.y;
+    switch(resizeDir){
+      case 'n': art.h += art.y - p.y; art.y = p.y; break;
+      case 's': art.h = dy; break;
+      case 'w': art.w += art.x - p.x; art.x = p.x; break;
+      case 'e': art.w = dx; break;
+      case 'nw': art.w += art.x - p.x; art.h += art.y - p.y; art.x = p.x; art.y = p.y; break;
+      case 'ne': art.w = dx; art.h += art.y - p.y; art.y = p.y; break;
+      case 'sw': art.w += art.x - p.x; art.x = p.x; art.h = dy; break;
+      case 'se': art.w = dx; art.h = dy; break;
     }
-
-    if(resizing){
-        const dx = p.x - art.x;
-        const dy = p.y - art.y;
-
-        switch(resizeDir){
-            case "n": art.h += art.y-p.y; art.y=p.y; break;
-            case "s": art.h = dy; break;
-            case "w": art.w += art.x-p.x; art.x=p.x; break;
-            case "e": art.w = dx; break;
-            case "nw": art.w+=art.x-p.x; art.x=p.x; art.h+=art.y-p.y; art.y=p.y; break;
-            case "ne": art.w=dx; art.h+=art.y-p.y; art.y=p.y; break;
-            case "sw": art.w+=art.x-p.x; art.x=p.x; art.h=dy; break;
-            case "se": art.w=dx; art.h=dy; break;
-        }
-
-        if(art.w<MIN_SIZE) art.w=MIN_SIZE;
-        if(art.h<MIN_SIZE) art.h=MIN_SIZE;
-
-        draw(); return;
-    }
+    if(art.w < MIN_SIZE) art.w = MIN_SIZE;
+    if(art.h < MIN_SIZE) art.h = MIN_SIZE;
+    draw();
+    return;
+  }
 });
 
+/* pointerup / cancel */
 function endPointer(e){
-    if(activePointerId !== e.pointerId) return;
-
-    dragging = false;
-    resizing = false;
-    draggingText = false;
-    resizingText = false;
-
-    pointerDown=false;
-    resizeDir=null;
-    activePointerId=null;
-
-    try{ canvas.releasePointerCapture(e.pointerId); }catch{}
-
-    draw();
+  if(activePointerId !== e.pointerId) return;
+  // reset flags
+  dragging = false;
+  resizing = false;
+  draggingText = false;
+  resizingText = false;
+  pointerDown = false;
+  resizeDir = null;
+  activePointerId = null;
+  // limpiar offsets temporales
+  texts.forEach(t => { delete t._offsetX; delete t._offsetY; });
+  draw();
 }
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('pointerout', endPointer);
 
-canvas.addEventListener("pointerup", endPointer);
-canvas.addEventListener("pointercancel", endPointer);
-canvas.addEventListener("pointerout", endPointer);
+/* =========================
+   MOCKUPS QUEMADOS (precarga) - uso imagenes del DOM como fuente para evitar fetch grande en runtime
+*/
+function loadDefaultMockup(baseName){
+  const pre = document.getElementById(baseName === DEFAULT_ELLAS ? 'pre_ellas' : 'pre_ellos');
+  if(!pre){ alert("No existe el mockup precargado"); return; }
 
-/* ========================= CARGA MOCKUPS ========================= */
-function loadDefaultMockup(base){
-    const preload = document.getElementById(base === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos");
-    if(!preload){ alert("No existe mockup"); return; }
-
-    const temp = new Image();
-    temp.crossOrigin="anonymous";
-
-    temp.onload = async ()=>{
-        try{
-            mockupImg = await optimizeImage(temp, 2048);
-        }catch{
-            mockupImg = temp;
-        }
-        setCanvasSizeToImage(mockupImg);
-        draw();
-    };
-    temp.onerror = ()=> alert("No se pudo cargar el mockup");
-    temp.src = preload.src;
-}
-
-btnEllas.onclick = ()=> loadDefaultMockup(DEFAULT_ELLAS);
-btnEllos.onclick = ()=> loadDefaultMockup(DEFAULT_ELLOS);
-
-/* ========================= SUBIR MOCKUP ========================= */
-mockupInput.onchange = e=>{
-    const f = e.target.files[0];
-    if(!f) return;
-
-    const url = URL.createObjectURL(f);
-    const img = new Image();
-
-    img.onload = async ()=>{
-        try{ mockupImg = await optimizeImage(img,2048); }
-        catch{ mockupImg = img; }
-
-        setCanvasSizeToImage(mockupImg);
-        draw();
-        URL.revokeObjectURL(url);
-    };
-    img.onerror = ()=> alert("No se pudo cargar el mockup");
-    img.src = url;
-};
-
-/* ========================= SUBIR ARTE ========================= */
-artInput.onchange = e=>{
-    const f = e.target.files[0];
-    if(!f) return;
-
-    const url = URL.createObjectURL(f);
-    const img = new Image();
-
-    img.onload = ()=>{
-        artImg = img;
-        const cw = canvas.width/DPR;
-
-        art.w = cw*0.4;
-        art.h = art.w*(img.height/img.width);
-        art.x = (cw-art.w)/2;
-        art.y = Math.max(60,(canvas.height/DPR)*0.25);
-
-        draw();
-        URL.revokeObjectURL(url);
-    };
-    img.onerror = ()=> alert("No se pudo cargar el diseño");
-    img.src = url;
-};
-
-/* ========================= TEXTO ========================= */
-textInput.oninput = ()=>{
-    textObj.value = textInput.value;
-    draw();
-};
-textColor.oninput = ()=>{
-    textObj.color = textColor.value;
-    draw();
-};
-
-/* ========================= DESCARGA ========================= */
-downloadBtn.onclick = async ()=>{
-    draw();
-
-    try{
-        await new Promise((res,rej)=>{
-            canvas.toBlob(blob=>{
-                if(!blob){ rej(); return; }
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href=url;
-                a.download="camiseta_cyberpunk.png";
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
-                res();
-            },"image/png");
-        });
-        return;
-    }catch{
-        try{
-            const url = canvas.toDataURL("image/png");
-            const a=document.createElement("a");
-            a.href=url;
-            a.download="camiseta_cyberpunk.png";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        }catch{
-            alert("Error al descargar. Usa servidor local o GitHub Pages.");
-        }
+  const temp = new Image();
+  temp.crossOrigin = "anonymous";
+  temp.onload = async () => {
+    try {
+      mockupImg = await optimizeImage(temp, 2048);
+    } catch {
+      mockupImg = temp;
     }
-};
-
-/* ========================= RESET ========================= */
-resetBtn.onclick = ()=>{
-    mockupImg=null;
-    artImg=null;
-
-    art={ x:100,y:150,w:300,h:300 };
-
-    textObj={
-        value:'',
-        x:120,
-        y:480,
-        size:48,
-        color:'#00e5ff',
-        baseline:'top'
-    };
-
-    textInput.value='';
-    textColor.value='#00e5ff';
-
-    canvas.width = 800*DPR;
-    canvas.height = 1000*DPR;
-    canvas.style.width = Math.min(800, window.innerWidth-40)+"px";
-
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-
+    setCanvasSizeToImage(mockupImg);
     draw();
-};
+  };
+  temp.onerror = ()=> alert("No se pudo cargar el mockup");
+  temp.src = pre.src;
+}
+btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
+btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
 
-/* ========================= INIT ========================= */
+/* =========================
+   SUBIR MOCKUP DESDE INPUT (optimiza antes de usar)
+*/
+mockupInput.addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = async ()=> {
+    try { mockupImg = await optimizeImage(img, 2048); }
+    catch { mockupImg = img; }
+    setCanvasSizeToImage(mockupImg);
+    draw();
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = ()=> { alert("No se pudo cargar el mockup"); URL.revokeObjectURL(url); };
+  img.src = url;
+});
+
+/* =========================
+   SUBIR ARTE / DISEÑO (input) - igual que antes
+*/
+artInput.addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  const img = new Image();
+  img.onload = ()=> {
+    artImg = img;
+    const cw = canvas.width / DPR;
+    art.w = cw * 0.4;
+    art.h = art.w * (img.height / img.width);
+    art.x = (cw - art.w) / 2;
+    art.y = Math.max(60, (canvas.height / DPR) * 0.25);
+    draw();
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = ()=> { alert("No se pudo cargar el diseño"); URL.revokeObjectURL(url); };
+  img.src = url;
+});
+
+/* =========================
+   TEXTO: añadir, editar, color, fuente, tamaño
+*/
+/* Añadir nuevo texto: toma valores de inputs actuales (texto, color, font, size)
+   - Crea el texto en el centro (o en posición por defecto)
+   - Lo adiciona al array y lo selecciona para edición inmediata
+*/
+addTextBtn.addEventListener('click', ()=>{
+  const val = textInput.value.trim() || 'Nuevo texto';
+  const font = fontSelect.value || 'Orbitron';
+  const color = textColor.value || '#00e5ff';
+  const size = parseInt(textSizeRange.value, 10) || 48;
+
+  // posición inicial relativa al canvas lógico
+  const cw = canvas.width / DPR;
+  const ch = canvas.height / DPR;
+  const newText = {
+    id: nextTextId++,
+    value: val,
+    x: cw * 0.1,
+    y: ch * 0.6,
+    size: size,
+    color: color,
+    font: font,
+    baseline: 'top'
+  };
+
+  texts.push(newText);
+  selectTextById(newText.id);
+});
+
+/* Editar texto: cuando usuario escribe en el input, actualizamos el texto seleccionado */
+textInput.addEventListener('input', ()=>{
+  if(selectedTextId === null) return;
+  const t = texts.find(x => x.id === selectedTextId);
+  if(!t) return;
+  t.value = textInput.value;
+  draw();
+});
+
+/* Color */
+textColor.addEventListener('input', ()=>{
+  if(selectedTextId === null) return;
+  const t = texts.find(x => x.id === selectedTextId);
+  if(!t) return;
+  t.color = textColor.value;
+  draw();
+});
+
+/* Font select */
+fontSelect.addEventListener('change', ()=>{
+  if(selectedTextId === null) return;
+  const t = texts.find(x => x.id === selectedTextId);
+  if(!t) return;
+  t.font = fontSelect.value;
+  draw();
+});
+
+/* Size slider (alternativa para redim en móvil / desktop) */
+textSizeRange.addEventListener('input', ()=>{
+  if(selectedTextId === null) return;
+  const t = texts.find(x => x.id === selectedTextId);
+  if(!t) return;
+  t.size = parseInt(textSizeRange.value, 10);
+  draw();
+});
+
+/* Delete selected text */
+deleteTextBtn.addEventListener('click', ()=>{
+  if(selectedTextId === null) return;
+  texts = texts.filter(x => x.id !== selectedTextId);
+  selectedTextId = null;
+  // limpiar inputs para evitar confusión
+  textInput.value = '';
+  draw();
+});
+
+/* =========================
+   DESCARGA (robusta)
+   - igual que antes: try toBlob, fallback to toDataURL
+*/
+downloadBtn.addEventListener('click', async ()=>{
+  draw();
+  try{
+    await new Promise((resolve, reject)=>{
+      canvas.toBlob((blob)=>{
+        if(!blob){ reject(new Error('no blob')); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'camiseta_cyberpunk.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 'image/png');
+    });
+    return;
+  } catch(err){
+    try{
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl; a.download = 'camiseta_cyberpunk.png'; document.body.appendChild(a); a.click(); a.remove();
+      return;
+    } catch {
+      alert('No se pudo descargar (CORS o restricciones). Usa GitHub Pages o servidor local.');
+    }
+  }
+});
+
+/* =========================
+   RESET: restablece estado como en tu versión original
+*/
+resetBtn.addEventListener('click', ()=>{
+  mockupImg = null;
+  artImg = null;
+  art = { x:100, y:150, w:300, h:300 };
+  texts = [];
+  nextTextId = 1;
+  selectedTextId = null;
+
+  textInput.value = '';
+  textColor.value = '#00e5ff';
+  fontSelect.value = 'Orbitron';
+  textSizeRange.value = 48;
+
+  const dpr = DPR;
+  canvas.width = 800 * dpr;
+  canvas.height = 1000 * dpr;
+  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
+});
+
+/* =========================
+   INIT: tamaño inicial del canvas (igual que tu versión)
+*/
 (function init(){
-    canvas.width = 800*DPR;
-    canvas.height = 1000*DPR;
-    canvas.style.width = Math.min(800, window.innerWidth-40)+"px";
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-    draw();
+  const dpr = DPR;
+  canvas.width = 800 * dpr;
+  canvas.height = 1000 * dpr;
+  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  draw();
 })();
 </script>
-
 </body>
 </html>
-
-
