@@ -5,51 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Diseñador Cyberpunk de Camisetas</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+
 <style>
-  :root{ --neon1:#ff00cc; --neon2:#00e5ff; --bg:#04040a; }
-  *{box-sizing:border-box}
-  body{
-    margin:0; min-height:100vh;
+:root{
+    --neon1:#ff00cc;
+    --neon2:#00e5ff;
+    --bg:#04040a;
+}
+*{box-sizing:border-box}
+body{
+    margin:0;
+    min-height:100vh;
     background:radial-gradient(circle at top left,var(--bg),#0b0b12);
-    color:#fff; font-family:'Orbitron',sans-serif;
-    display:flex; flex-direction:column; align-items:center; gap:12px; padding:12px;
-  }
-  header{
-    width:100%; text-align:center; padding:14px;
-    background:linear-gradient(90deg,var(--neon1),var(--neon2));
-    box-shadow:0 6px 30px rgba(0,0,0,0.4); border-radius:8px; font-size:1.2rem;
-  }
-  .controls{ width:100%; max-width:1000px; display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; padding:8px; }
-  .controls > * { min-width:120px; }
-  button, .file-label{
-    background: linear-gradient(90deg,var(--neon1),var(--neon2));
-    color:#000; border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:700; box-shadow:0 8px 20px rgba(0,0,0,0.35);
+    color:#fff;
+    font-family:'Orbitron',sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding:12px;
+}
+header{
+    width:100%;
     text-align:center;
-  }
-  input[type="file"]{ display:none; }
-  .file-label{ display:inline-block; }
-  .canvas-wrap{ width:100%; max-width:900px; display:flex; justify-content:center; align-items:center; }
-  canvas{
-    width:100%; height:auto; max-height:78vh; border-radius:12px;
-    border:2px solid rgba(0,229,255,0.12); box-shadow:0 10px 40px rgba(0,0,0,0.6); background:#0b0b0b; touch-action:none;
-  }
-  .hint{ color:#cfe9ff88; font-size:0.9rem; text-align:center; max-width:900px; }
-  /* text input small */
-  #textInput{ min-width:160px; padding:8px 10px; border-radius:8px; border:2px solid rgba(0,229,255,0.12); background:#0b0b0b; color:#00e5ff; font-weight:700; }
-  #textColor{ min-width:120px; padding:8px; border-radius:8px; border:2px solid rgba(0,229,255,0.12); background:#111; color:#00e5ff; }
-  @media (max-width:540px){ .controls > * { min-width: 48%; } .controls { gap:8px; } }
+    padding:14px;
+    background:linear-gradient(90deg,var(--neon1),var(--neon2));
+    box-shadow:0 6px 30px rgba(0,0,0,0.4);
+    border-radius:8px;
+    font-size:1.2rem;
+}
+.controls{
+    width:100%;
+    max-width:1000px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    padding:8px;
+}
+.controls > * { min-width:120px; }
+button, .file-label{
+    background: linear-gradient(90deg,var(--neon1),var(--neon2));
+    color:#000;
+    border:none;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+    box-shadow:0 8px 20px rgba(0,0,0,0.35);
+    text-align:center;
+}
+input[type="file"]{ display:none; }
+.file-label{ display:inline-block; }
+.canvas-wrap{
+    width:100%;
+    max-width:900px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+canvas{
+    width:100%;
+    height:auto;
+    max-height:78vh;
+    border-radius:12px;
+    border:2px solid rgba(0,229,255,0.12);
+    box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    background:#0b0b0b;
+    touch-action:none;
+}
+.hint{
+    color:#cfe9ff88;
+    font-size:0.9rem;
+    text-align:center;
+    max-width:900px;
+}
+#textInput{
+    min-width:160px;
+    padding:8px 10px;
+    border-radius:8px;
+    border:2px solid rgba(0,229,255,0.12);
+    background:#0b0b0b;
+    color:#00e5ff;
+    font-weight:700;
+}
+#textColor{
+    min-width:120px;
+    padding:8px;
+    border-radius:8px;
+    border:2px solid rgba(0,229,255,0.12);
+    background:#111;
+    color:#00e5ff;
+}
+@media (max-width:540px){
+    .controls > * { min-width:48%; }
+    .controls { gap:8px; }
+}
 </style>
 </head>
+
 <body>
-  <header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
 
-  <!-- Precarga silenciosa para evitar congelamiento en celular -->
-  <div style="opacity:0; height:0; overflow:hidden;">
-      <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
-      <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
-  </div>
+<header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
 
-  <div class="controls">
+<!-- Precarga silenciosa (evita congelamiento móvil) -->
+<div style="opacity:0; height:0; overflow:hidden;">
+    <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
+    <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
+</div>
+
+<div class="controls">
     <button id="btnEllas">👚 Ellas</button>
     <button id="btnEllos">👕 Ellos</button>
 
@@ -59,21 +125,21 @@
     <label class="file-label" for="artInput">🖼️ Subir diseño</label>
     <input id="artInput" type="file" accept="image/*">
 
-    <!-- Texto editable -->
     <input id="textInput" type="text" placeholder="✏️ Escribe texto...">
-    <input id="textColor" type="color" value="#00e5ff" title="Color del texto">
+    <input id="textColor" type="color" value="#00e5ff">
 
     <button id="downloadBtn">⬇️ Descargar PNG</button>
     <button id="resetBtn">↺ Reiniciar</button>
-  </div>
+</div>
 
-  <div class="canvas-wrap"><canvas id="canvas"></canvas></div>
-  <div class="hint">Toca/arrastra para mover. Arrastra cualquier borde o esquina para redimensionar. Compatible PC y móvil.</div>
+<div class="canvas-wrap">
+    <canvas id="canvas"></canvas>
+</div>
+
+<div class="hint">Toca/arrastra para mover. Arrastra bordes para redimensionar. Compatible PC y móvil.</div>
 
 <script>
-/* =========================
-   Configuración / DOM
-   ========================= */
+/* ========================= DOM & CONFIG ========================= */
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
@@ -90,453 +156,449 @@ const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const DPR = window.devicePixelRatio || 1;
-const HANDLE = 18; // zona para detectar resize
+const HANDLE = 18;
 const MIN_SIZE = 30;
 
-/* =========================
-   Estado (mantener igual lógica previa)
-   ========================= */
+/* ========================= ESTADO ========================= */
 let mockupImg = null;
 let artImg = null;
-let art = { x: 100, y: 150, w: 300, h: 300 };
+
+let art = { x:100, y:150, w:300, h:300 };
 
 let pointerDown = false;
 let activePointerId = null;
-
 let dragging = false;
 let resizing = false;
 let resizeDir = null;
 let dragOffset = { x:0, y:0 };
 
-/* Texto editable: mantiene posición y tamaño relativo */
+/* TEXTO */
 let textObj = {
-  value: '',
-  x: 120,
-  y: 480,
-  size: 48,
-  color: '#00e5ff',
-  baseline: 'top'
+    value:'',
+    x:120,
+    y:480,
+    size:48,
+    color:'#00e5ff',
+    baseline:'top'
 };
 let draggingText = false;
 let resizingText = false;
 let textResizeStart = null;
 
-/* =========================
-   Helper: optimiza imágenes grandes (reduce memoria en móviles)
-   ========================= */
+/* ========================= OPTIMIZACIÓN ========================= */
 function optimizeImage(img, maxSize = 2048){
-  return new Promise(resolve=>{
-    if(img.width <= maxSize && img.height <= maxSize){ resolve(img); return; }
-    const scale = maxSize / Math.max(img.width, img.height);
-    const w = Math.round(img.width * scale);
-    const h = Math.round(img.height * scale);
-    const buf = document.createElement('canvas');
-    buf.width = w; buf.height = h;
-    const bctx = buf.getContext('2d');
-    bctx.drawImage(img,0,0,w,h);
-    const out = new Image();
-    out.onload = () => resolve(out);
-    out.src = buf.toDataURL('image/jpeg', 0.9);
-  });
+    return new Promise(resolve=>{
+        if(img.width <= maxSize && img.height <= maxSize){
+            resolve(img); return;
+        }
+        const scale = maxSize / Math.max(img.width, img.height);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+
+        const buf = document.createElement('canvas');
+        buf.width = w; buf.height = h;
+
+        const bctx = buf.getContext('2d');
+        bctx.drawImage(img,0,0,w,h);
+
+        const out = new Image();
+        out.onload = ()=> resolve(out);
+        out.src = buf.toDataURL('image/jpeg',0.9);
+    });
 }
 
-/* =========================
-   Ajusta canvas al mockup (DPR aware)
-   ========================= */
+/* ========================= CANVAS SIZE ========================= */
 function setCanvasSizeToImage(img){
-  canvas.width = img.width * DPR;
-  canvas.height = img.height * DPR;
-  // conservar responsive CSS width (fix para móviles)
-  canvas.style.setProperty('width', Math.min(img.width, window.innerWidth - 40) + 'px', 'important');
-  canvas.style.height = 'auto';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+    canvas.width = img.width * DPR;
+    canvas.height = img.height * DPR;
+
+    canvas.style.width = Math.min(img.width, window.innerWidth - 40) + "px";
+    canvas.style.height = "auto";
+
+    ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
-/* =========================
-   DIBUJO PRINCIPAL
-   ========================= */
+/* ========================= DIBUJO ========================= */
 function draw(){
-  // limpiar
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // mockup / fondo
-  if(mockupImg){
-    ctx.drawImage(mockupImg, 0, 0, canvas.width / DPR, canvas.height / DPR);
-  } else {
-    ctx.fillStyle = '#0b0b0b';
-    ctx.fillRect(0,0,canvas.width / DPR, canvas.height / DPR);
-  }
+    if(mockupImg){
+        ctx.drawImage(mockupImg,0,0,canvas.width/DPR,canvas.height/DPR);
+    } else {
+        ctx.fillStyle="#0b0b0b";
+        ctx.fillRect(0,0,canvas.width/DPR,canvas.height/DPR);
+    }
 
-  // arte (diseño)
-  if(artImg){
-    ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
-  }
+    if(artImg){
+        ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
+    }
 
-  // borde selección del arte si está interactuando
-  if(artImg && (dragging || resizing || pointerDown)){
-    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2;
-    ctx.strokeRect(art.x, art.y, art.w, art.h);
-    // dibujar manejadores en esquinas y lados (visuales)
-    const hs = HANDLE;
-    // esquinas
-    const corners = [
-      [art.x, art.y],
-      [art.x + art.w, art.y],
-      [art.x, art.y + art.h],
-      [art.x + art.w, art.y + art.h]
-    ];
-    ctx.fillStyle = '#ff00cc';
-    corners.forEach(c => ctx.fillRect(c[0]-hs/2, c[1]-hs/2, hs, hs));
-    // lados (opcionales)
-    ctx.fillRect(art.x + art.w/2 - hs/2, art.y - hs/2, hs, hs);
-    ctx.fillRect(art.x + art.w/2 - hs/2, art.y + art.h - hs/2, hs, hs);
-    ctx.fillRect(art.x - hs/2, art.y + art.h/2 - hs/2, hs, hs);
-    ctx.fillRect(art.x + art.w - hs/2, art.y + art.h/2 - hs/2, hs, hs);
-  }
+    /* Selección arte */
+    if(artImg && (dragging || resizing || pointerDown)){
+        ctx.strokeStyle="#00ffff";
+        ctx.lineWidth=2;
+        ctx.strokeRect(art.x, art.y, art.w, art.h);
 
-  // texto
-  if(textObj.value){
-    ctx.font = `${textObj.size}px Orbitron`;
-    ctx.fillStyle = textObj.color;
-    ctx.textBaseline = textObj.baseline;
-    ctx.fillText(textObj.value, textObj.x, textObj.y);
-  }
+        ctx.fillStyle="#ff00cc";
+        const hs = HANDLE;
 
-  // si se está interactuando con el texto, mostrar su caja y manejadores
-  if((draggingText || resizingText || pointerDown) && textObj.value){
+        const corners = [
+            [art.x, art.y],
+            [art.x + art.w, art.y],
+            [art.x, art.y + art.h],
+            [art.x + art.w, art.y + art.h]
+        ];
+        corners.forEach(c => ctx.fillRect(c[0]-hs/2, c[1]-hs/2, hs, hs));
+
+        ctx.fillRect(art.x + art.w/2 - hs/2, art.y - hs/2, hs, hs);
+        ctx.fillRect(art.x + art.w/2 - hs/2, art.y + art.h - hs/2, hs, hs);
+        ctx.fillRect(art.x - hs/2, art.y + art.h/2 - hs/2, hs, hs);
+        ctx.fillRect(art.x + art.w - hs/2, art.y + art.h/2 - hs/2, hs, hs);
+    }
+
+    /* TEXTO */
+    if(textObj.value){
+        ctx.font = `${textObj.size}px Orbitron`;
+        ctx.fillStyle = textObj.color;
+        ctx.textBaseline = textObj.baseline;
+        ctx.fillText(textObj.value, textObj.x, textObj.y);
+    }
+
+    /* Selección texto */
+    if((draggingText || resizingText || pointerDown) && textObj.value){
+        ctx.font = `${textObj.size}px Orbitron`;
+        const tw = ctx.measureText(textObj.value).width;
+        const th = textObj.size;
+
+        ctx.strokeStyle="#00ffff";
+        ctx.strokeRect(textObj.x, textObj.y, tw, th);
+
+        ctx.fillStyle="#ff00cc";
+        ctx.fillRect(textObj.x + tw - HANDLE/2, textObj.y + th - HANDLE/2, HANDLE, HANDLE);
+    }
+}
+
+/* ========================= COORDENADAS ========================= */
+function getPointerPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX ?? e.touches?.[0]?.clientX;
+    const cy = e.clientY ?? e.touches?.[0]?.clientY;
+    return {
+        x:(cx - rect.left) * (canvas.width / rect.width) / DPR,
+        y:(cy - rect.top) * (canvas.height / rect.height) / DPR
+    };
+}
+
+/* ========================= HIT TEST ========================= */
+function pointInRect(p, x,y,w,h){
+    return p.x>=x && p.x<=x+w && p.y>=y && p.y<=y+h;
+}
+function getArtResizeDir(p){
+    const nearL = Math.abs(p.x - art.x) < HANDLE;
+    const nearR = Math.abs(p.x - (art.x+art.w)) < HANDLE;
+    const nearT = Math.abs(p.y - art.y) < HANDLE;
+    const nearB = Math.abs(p.y - (art.y+art.h)) < HANDLE;
+
+    if(nearT && nearL) return "nw";
+    if(nearT && nearR) return "ne";
+    if(nearB && nearL) return "sw";
+    if(nearB && nearR) return "se";
+    if(nearT) return "n";
+    if(nearB) return "s";
+    if(nearL) return "w";
+    if(nearR) return "e";
+    return null;
+}
+function pointOnTextHandle(p){
+    if(!textObj.value) return false;
+
     ctx.font = `${textObj.size}px Orbitron`;
     const tw = ctx.measureText(textObj.value).width;
     const th = textObj.size;
-    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2;
-    ctx.strokeRect(textObj.x, textObj.y, tw, th);
-    ctx.fillStyle = '#ff00cc';
-    // manejar abajo-derecha para escalar texto
-    ctx.fillRect(textObj.x + tw - HANDLE/2, textObj.y + th - HANDLE/2, HANDLE, HANDLE);
-  }
+
+    return pointInRect(
+        p,
+        textObj.x + tw - HANDLE/2,
+        textObj.y + th - HANDLE/2,
+        HANDLE, HANDLE
+    );
 }
-
-/* =========================
-   COORDENADAS: cliente -> bitmap coords (DPR aware)
-   ========================= */
-function getPointerPos(e){
-  const rect = canvas.getBoundingClientRect();
-  const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX);
-  const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY);
-  return {
-    x: (clientX - rect.left) * (canvas.width / rect.width) / DPR,
-    y: (clientY - rect.top) * (canvas.height / rect.height) / DPR
-  };
-}
-
-/* =========================
-   DETECCIÓN REDIM / HIT TEST
-   ========================= */
-function pointInRect(p, rx, ry, rw, rh){ return p.x >= rx && p.x <= rx+rw && p.y >= ry && p.y <= ry+rh; }
-
-function getArtResizeDir(p){
-  const nearLeft = Math.abs(p.x - art.x) < HANDLE;
-  const nearRight = Math.abs(p.x - (art.x + art.w)) < HANDLE;
-  const nearTop = Math.abs(p.y - art.y) < HANDLE;
-  const nearBottom = Math.abs(p.y - (art.y + art.h)) < HANDLE;
-  if (nearTop && nearLeft) return 'nw';
-  if (nearTop && nearRight) return 'ne';
-  if (nearBottom && nearLeft) return 'sw';
-  if (nearBottom && nearRight) return 'se';
-  if (nearTop) return 'n';
-  if (nearBottom) return 's';
-  if (nearLeft) return 'w';
-  if (nearRight) return 'e';
-  return null;
-}
-
-function pointOnTextHandle(p){
-  if(!textObj.value) return false;
-  ctx.font = `${textObj.size}px Orbitron`;
-  const tw = ctx.measureText(textObj.value).width;
-  const th = textObj.size;
-  // handle bottom-right
-  return pointInRect(p, textObj.x + tw - HANDLE/2, textObj.y + th - HANDLE/2, HANDLE, HANDLE);
-}
-
 function pointInText(p){
-  if(!textObj.value) return false;
-  ctx.font = `${textObj.size}px Orbitron`;
-  const tw = ctx.measureText(textObj.value).width;
-  const th = textObj.size;
-  return pointInRect(p, textObj.x, textObj.y, tw, th);
+    if(!textObj.value) return false;
+
+    ctx.font = `${textObj.size}px Orbitron`;
+    const tw = ctx.measureText(textObj.value).width;
+    const th = textObj.size;
+
+    return pointInRect(p, textObj.x, textObj.y, tw, th);
 }
 
-/* =========================
-   EVENTOS POINTER (unifica mouse/touch)
-   ========================= */
-canvas.addEventListener('pointerdown', (e)=>{
-  e.preventDefault();
-  // multi-pointer protection
-  if(activePointerId !== null && activePointerId !== e.pointerId) return;
-  activePointerId = e.pointerId;
-  canvas.setPointerCapture(activePointerId);
+/* ========================= POINTER EVENTS ========================= */
+canvas.addEventListener("pointerdown", e=>{
+    e.preventDefault();
 
-  pointerDown = true;
-  const p = getPointerPos(e);
+    if(activePointerId !== null && activePointerId !== e.pointerId) return;
+    activePointerId = e.pointerId;
+    canvas.setPointerCapture(activePointerId);
+    pointerDown = true;
 
-  // prioridad: primero chequear si clicaron el handle de texto (para escalar)
-  if(pointOnTextHandle(p)){
-    resizingText = true;
-    textResizeStart = { px: p.x, py: p.y, size: textObj.size };
-    return;
-  }
+    const p = getPointerPos(e);
 
-  // luego chequear si clicaron dentro del texto -> arrastrar texto
-  if(pointInText(p)){
-    draggingText = true;
-    textObj.offsetX = p.x - textObj.x;
-    textObj.offsetY = p.y - textObj.y;
+    if(pointOnTextHandle(p)){
+        resizingText = true;
+        textResizeStart = { px:p.x, py:p.y, size:textObj.size };
+        return;
+    }
+
+    if(pointInText(p)){
+        draggingText = true;
+        textObj.offsetX = p.x - textObj.x;
+        textObj.offsetY = p.y - textObj.y;
+        draw();
+        return;
+    }
+
+    const dir = getArtResizeDir(p);
+    if(artImg && dir){
+        resizing = true;
+        resizeDir = dir;
+        return;
+    }
+
+    if(artImg && pointInRect(p, art.x, art.y, art.w, art.h)){
+        dragging = true;
+        dragOffset = { x:p.x-art.x, y:p.y-art.y };
+        draw();
+        return;
+    }
+
     draw();
-    return;
-  }
-
-  // chequear si clicaron un handle de art (resize)
-  const artDir = getArtResizeDir(p);
-  if(artImg && artDir){
-    resizing = true;
-    resizeDir = artDir;
-    return;
-  }
-
-  // chequear si clicaron dentro del arte -> arrastrar arte
-  if(artImg && pointInRect(p, art.x, art.y, art.w, art.h)){
-    dragging = true;
-    dragOffset.x = p.x - art.x;
-    dragOffset.y = p.y - art.y;
-    draw();
-    return;
-  }
-
-  // si tocó afuera, deseleccionar (no hacemos nada especial)
-  draw();
 });
 
-canvas.addEventListener('pointermove', (e)=>{
-  const p = getPointerPos(e);
-  // update cursor hints
-  if(artImg){
-    const artDir = getArtResizeDir(p);
-    if(artDir) canvas.style.cursor = artDir + '-resize';
-    else if(pointInRect(p, art.x, art.y, art.w, art.h)) canvas.style.cursor = 'move';
-    else canvas.style.cursor = 'default';
-  } else {
-    canvas.style.cursor = 'default';
-  }
+canvas.addEventListener("pointermove", e=>{
+    const p = getPointerPos(e);
 
-  if(!pointerDown || activePointerId !== e.pointerId) return;
-  e.preventDefault();
-
-  // dragging text
-  if(draggingText){
-    textObj.x = p.x - textObj.offsetX;
-    textObj.y = p.y - textObj.offsetY;
-    draw();
-    return;
-  }
-
-  // resizing text
-  if(resizingText && textResizeStart){
-    const dx = p.x - textResizeStart.px;
-    // simple scale factor -> change size proportionally
-    const newSize = Math.max(12, Math.round(textResizeStart.size + dx * 0.2));
-    textObj.size = newSize;
-    draw();
-    return;
-  }
-
-  // dragging art
-  if(dragging){
-    art.x = p.x - dragOffset.x;
-    art.y = p.y - dragOffset.y;
-    draw();
-    return;
-  }
-
-  // resizing art
-  if(resizing){
-    const dx = p.x - art.x;
-    const dy = p.y - art.y;
-    switch(resizeDir){
-      case 'n': art.h += art.y - p.y; art.y = p.y; break;
-      case 's': art.h = dy; break;
-      case 'w': art.w += art.x - p.x; art.x = p.x; break;
-      case 'e': art.w = dx; break;
-      case 'nw': art.w += art.x - p.x; art.h += art.y - p.y; art.x = p.x; art.y = p.y; break;
-      case 'ne': art.w = dx; art.h += art.y - p.y; art.y = p.y; break;
-      case 'sw': art.w += art.x - p.x; art.x = p.x; art.h = dy; break;
-      case 'se': art.w = dx; art.h = dy; break;
+    if(artImg){
+        const dir = getArtResizeDir(p);
+        if(dir) canvas.style.cursor = dir+"-resize";
+        else if(pointInRect(p, art.x, art.y, art.w, art.h)) canvas.style.cursor="move";
+        else canvas.style.cursor="default";
     }
-    if(art.w < MIN_SIZE) art.w = MIN_SIZE;
-    if(art.h < MIN_SIZE) art.h = MIN_SIZE;
-    draw();
-    return;
-  }
+
+    if(!pointerDown || activePointerId !== e.pointerId) return;
+    e.preventDefault();
+
+    if(draggingText){
+        textObj.x = p.x - textObj.offsetX;
+        textObj.y = p.y - textObj.offsetY;
+        draw(); return;
+    }
+
+    if(resizingText && textResizeStart){
+        const dx = p.x - textResizeStart.px;
+        textObj.size = Math.max(12, Math.round(textResizeStart.size + dx*0.2));
+        draw(); return;
+    }
+
+    if(dragging){
+        art.x = p.x - dragOffset.x;
+        art.y = p.y - dragOffset.y;
+        draw(); return;
+    }
+
+    if(resizing){
+        const dx = p.x - art.x;
+        const dy = p.y - art.y;
+
+        switch(resizeDir){
+            case "n": art.h += art.y-p.y; art.y=p.y; break;
+            case "s": art.h = dy; break;
+            case "w": art.w += art.x-p.x; art.x=p.x; break;
+            case "e": art.w = dx; break;
+            case "nw": art.w+=art.x-p.x; art.x=p.x; art.h+=art.y-p.y; art.y=p.y; break;
+            case "ne": art.w=dx; art.h+=art.y-p.y; art.y=p.y; break;
+            case "sw": art.w+=art.x-p.x; art.x=p.x; art.h=dy; break;
+            case "se": art.w=dx; art.h=dy; break;
+        }
+
+        if(art.w<MIN_SIZE) art.w=MIN_SIZE;
+        if(art.h<MIN_SIZE) art.h=MIN_SIZE;
+
+        draw(); return;
+    }
 });
 
 function endPointer(e){
-  if(activePointerId !== e.pointerId) return;
-  // reset states
-  dragging = resizing = draggingText = resizingText = false;
-  pointerDown = false;
-  resizeDir = null;
-  activePointerId = null;
-  try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
-  draw();
-}
-canvas.addEventListener('pointerup', endPointer);
-canvas.addEventListener('pointercancel', endPointer);
-canvas.addEventListener('pointerout', endPointer);
+    if(activePointerId !== e.pointerId) return;
 
-/* =========================
-   CARGA DE MOCKUPS QUEMADOS (usa precarga en DOM para evitar freeze)
-   ========================= */
-function loadDefaultMockup(baseName){
-  const preloadImg = document.getElementById(baseName === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos");
-  if(!preloadImg){ alert("No existe el mockup precargado"); return; }
-  const temp = new Image();
-  temp.crossOrigin = "anonymous";
-  temp.onload = async ()=>{
-    try{
-      const optimized = await optimizeImage(temp, 2048);
-      mockupImg = optimized;
-      setCanvasSizeToImage(mockupImg);
-      draw();
-    }catch{
-      mockupImg = temp;
-      setCanvasSizeToImage(mockupImg);
-      draw();
-    }
-  };
-  temp.onerror = ()=> alert("No se pudo cargar el mockup");
-  temp.src = preloadImg.src;
-}
+    dragging = false;
+    resizing = false;
+    draggingText = false;
+    resizingText = false;
 
-btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
-btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
+    pointerDown=false;
+    resizeDir=null;
+    activePointerId=null;
 
-/* =========================
-   SUBIR MOCKUP (input)
-   ========================= */
-mockupInput.addEventListener('change', (e)=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  const img = new Image();
-  img.onload = async ()=>{
-    try{
-      const optimized = await optimizeImage(img, 2048);
-      mockupImg = optimized;
-    }catch{
-      mockupImg = img;
-    } finally {
-      setCanvasSizeToImage(mockupImg);
-      draw();
-      URL.revokeObjectURL(url);
-    }
-  };
-  img.onerror = ()=> { alert("No se pudo cargar el mockup"); URL.revokeObjectURL(url); };
-  img.src = url;
-});
+    try{ canvas.releasePointerCapture(e.pointerId); }catch{}
 
-/* =========================
-   SUBIR ARTE / DISEÑO (input)
-   ========================= */
-artInput.addEventListener('change', (e)=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  const url = URL.createObjectURL(f);
-  const img = new Image();
-  img.onload = ()=>{
-    artImg = img;
-    // ajustar tamaño inicial relativo al canvas lógico
-    const cw = canvas.width / DPR;
-    art.w = cw * 0.4;
-    art.h = art.w * (img.height / img.width);
-    art.x = (cw - art.w)/2;
-    art.y = Math.max(60, (canvas.height / DPR) * 0.25);
     draw();
-    URL.revokeObjectURL(url);
-  };
-  img.onerror = ()=> { alert("No se pudo cargar el diseño"); URL.revokeObjectURL(url); };
-  img.src = url;
-});
+}
 
-/* =========================
-   TEXTO: input y color
-   ========================= */
-textInput.addEventListener('input', ()=>{
-  textObj.value = textInput.value;
-  draw();
-});
-textColor.addEventListener('input', ()=>{
-  textObj.color = textColor.value;
-  draw();
-});
+canvas.addEventListener("pointerup", endPointer);
+canvas.addEventListener("pointercancel", endPointer);
+canvas.addEventListener("pointerout", endPointer);
 
-/* =========================
-   DESCARGA ROBUSTA
-   ========================= */
-downloadBtn.addEventListener('click', async ()=>{
-  draw();
-  try{
-    await new Promise((resolve, reject)=>{
-      canvas.toBlob((blob)=>{
-        if(!blob){ reject(new Error('no blob')); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'camiseta_cyberpunk.png';
-        document.body.appendChild(a); a.click(); a.remove();
+/* ========================= CARGA MOCKUPS ========================= */
+function loadDefaultMockup(base){
+    const preload = document.getElementById(base === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos");
+    if(!preload){ alert("No existe mockup"); return; }
+
+    const temp = new Image();
+    temp.crossOrigin="anonymous";
+
+    temp.onload = async ()=>{
+        try{
+            mockupImg = await optimizeImage(temp, 2048);
+        }catch{
+            mockupImg = temp;
+        }
+        setCanvasSizeToImage(mockupImg);
+        draw();
+    };
+    temp.onerror = ()=> alert("No se pudo cargar el mockup");
+    temp.src = preload.src;
+}
+
+btnEllas.onclick = ()=> loadDefaultMockup(DEFAULT_ELLAS);
+btnEllos.onclick = ()=> loadDefaultMockup(DEFAULT_ELLOS);
+
+/* ========================= SUBIR MOCKUP ========================= */
+mockupInput.onchange = e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+
+    img.onload = async ()=>{
+        try{ mockupImg = await optimizeImage(img,2048); }
+        catch{ mockupImg = img; }
+
+        setCanvasSizeToImage(mockupImg);
+        draw();
         URL.revokeObjectURL(url);
-        resolve();
-      }, 'image/png');
-    });
-    return;
-  }catch(err){
+    };
+    img.onerror = ()=> alert("No se pudo cargar el mockup");
+    img.src = url;
+};
+
+/* ========================= SUBIR ARTE ========================= */
+artInput.onchange = e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+
+    img.onload = ()=>{
+        artImg = img;
+        const cw = canvas.width/DPR;
+
+        art.w = cw*0.4;
+        art.h = art.w*(img.height/img.width);
+        art.x = (cw-art.w)/2;
+        art.y = Math.max(60,(canvas.height/DPR)*0.25);
+
+        draw();
+        URL.revokeObjectURL(url);
+    };
+    img.onerror = ()=> alert("No se pudo cargar el diseño");
+    img.src = url;
+};
+
+/* ========================= TEXTO ========================= */
+textInput.oninput = ()=>{
+    textObj.value = textInput.value;
+    draw();
+};
+textColor.oninput = ()=>{
+    textObj.color = textColor.value;
+    draw();
+};
+
+/* ========================= DESCARGA ========================= */
+downloadBtn.onclick = async ()=>{
+    draw();
+
     try{
-      const dataUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataUrl; a.download = 'camiseta_cyberpunk.png'; document.body.appendChild(a); a.click(); a.remove();
-      return;
+        await new Promise((res,rej)=>{
+            canvas.toBlob(blob=>{
+                if(!blob){ rej(); return; }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href=url;
+                a.download="camiseta_cyberpunk.png";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                res();
+            },"image/png");
+        });
+        return;
     }catch{
-      alert('No se pudo descargar (CORS o restricciones). Usa GitHub Pages o servidor local.');
+        try{
+            const url = canvas.toDataURL("image/png");
+            const a=document.createElement("a");
+            a.href=url;
+            a.download="camiseta_cyberpunk.png";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }catch{
+            alert("Error al descargar. Usa servidor local o GitHub Pages.");
+        }
     }
-  }
-});
+};
 
-/* =========================
-   RESET
-   ========================= */
-resetBtn.addEventListener('click', ()=>{
-  mockupImg = null; artImg = null;
-  art = { x:100, y:150, w:300, h:300 };
-  textObj = { value:'', x:120, y:480, size:48, color:'#00e5ff', baseline:'top' };
-  textInput.value = '';
-  textColor.value = '#00e5ff';
-  const dpr = DPR;
-  canvas.width = 800 * dpr;
-  canvas.height = 1000 * dpr;
-  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  draw();
-});
+/* ========================= RESET ========================= */
+resetBtn.onclick = ()=>{
+    mockupImg=null;
+    artImg=null;
 
-/* =========================
-   INIT
-   ========================= */
+    art={ x:100,y:150,w:300,h:300 };
+
+    textObj={
+        value:'',
+        x:120,
+        y:480,
+        size:48,
+        color:'#00e5ff',
+        baseline:'top'
+    };
+
+    textInput.value='';
+    textColor.value='#00e5ff';
+
+    canvas.width = 800*DPR;
+    canvas.height = 1000*DPR;
+    canvas.style.width = Math.min(800, window.innerWidth-40)+"px";
+
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+
+    draw();
+};
+
+/* ========================= INIT ========================= */
 (function init(){
-  const dpr = DPR;
-  canvas.width = 800 * dpr;
-  canvas.height = 1000 * dpr;
-  canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  draw();
+    canvas.width = 800*DPR;
+    canvas.height = 1000*DPR;
+    canvas.style.width = Math.min(800, window.innerWidth-40)+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    draw();
 })();
 </script>
+
 </body>
 </html>
-
