@@ -34,13 +34,16 @@
     border:2px solid rgba(0,229,255,0.12); box-shadow:0 10px 40px rgba(0,0,0,0.6); background:#0b0b0b; touch-action:none;
   }
   .hint{ color:#cfe9ff88; font-size:0.9rem; text-align:center; max-width:900px; }
+  /* text input small */
+  #textInput{ min-width:160px; padding:8px 10px; border-radius:8px; border:2px solid rgba(0,229,255,0.12); background:#0b0b0b; color:#00e5ff; font-weight:700; }
+  #textColor{ min-width:120px; padding:8px; border-radius:8px; border:2px solid rgba(0,229,255,0.12); background:#111; color:#00e5ff; }
   @media (max-width:540px){ .controls > * { min-width: 48%; } .controls { gap:8px; } }
 </style>
 </head>
 <body>
   <header>👕 Diseñador Cyberpunk — Personaliza tu Camiseta</header>
 
-  <!-- 🔥 NUEVO: Precarga silenciosa para evitar congelamiento en celular -->
+  <!-- Precarga silenciosa para evitar congelamiento en celular -->
   <div style="opacity:0; height:0; overflow:hidden;">
       <img id="pre_ellas" src="mockup_ellas.png" onerror="this.src='mockup_ellas.jpg'">
       <img id="pre_ellos" src="mockup_ellos.png" onerror="this.src='mockup_ellos.jpg'">
@@ -56,6 +59,10 @@
     <label class="file-label" for="artInput">🖼️ Subir diseño</label>
     <input id="artInput" type="file" accept="image/*">
 
+    <!-- Texto editable -->
+    <input id="textInput" type="text" placeholder="✏️ Escribe texto...">
+    <input id="textColor" type="color" value="#00e5ff" title="Color del texto">
+
     <button id="downloadBtn">⬇️ Descargar PNG</button>
     <button id="resetBtn">↺ Reiniciar</button>
   </div>
@@ -64,7 +71,9 @@
   <div class="hint">Toca/arrastra para mover. Arrastra cualquier borde o esquina para redimensionar. Compatible PC y móvil.</div>
 
 <script>
-/* ============================ */
+/* =========================
+   Configuración / DOM
+   ========================= */
 const DEFAULT_ELLAS = 'mockup_ellas';
 const DEFAULT_ELLOS = 'mockup_ellos';
 
@@ -75,106 +84,156 @@ const btnEllas = document.getElementById('btnEllas');
 const btnEllos = document.getElementById('btnEllos');
 const mockupInput = document.getElementById('mockupInput');
 const artInput = document.getElementById('artInput');
+const textInput = document.getElementById('textInput');
+const textColor = document.getElementById('textColor');
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const DPR = window.devicePixelRatio || 1;
-const HANDLE = 20;
+const HANDLE = 18; // zona para detectar resize
 const MIN_SIZE = 30;
 
-/* ============================
-   NUEVO: optimiza (downscale) imagenes grandes a max 2048 px
-   ============================ */
-function optimizeImage(img, maxSize = 1500) {
-  return new Promise((resolve) => {
-    // si ya está dentro del límite, devolverla tal cual
-    if (img.width <= maxSize && img.height <= maxSize) {
-      resolve(img);
-      return;
-    }
-    const scale = maxSize / Math.max(img.width, img.height);
-    const w = Math.round(img.width * scale);
-    const h = Math.round(img.height * scale);
-
-    const buffer = document.createElement('canvas');
-    buffer.width = w;
-    buffer.height = h;
-    const bctx = buffer.getContext('2d');
-
-    // dibujar y convertir a imagen optimizada (jpeg para menor peso)
-    bctx.drawImage(img, 0, 0, w, h);
-    const dataUrl = buffer.toDataURL('image/jpeg', 0.92);
-    const out = new Image();
-    out.onload = () => resolve(out);
-    out.src = dataUrl;
-  });
-}
-
-/* ============================ */
+/* =========================
+   Estado (mantener igual lógica previa)
+   ========================= */
 let mockupImg = null;
 let artImg = null;
 let art = { x: 100, y: 150, w: 300, h: 300 };
 
 let pointerDown = false;
 let activePointerId = null;
+
 let dragging = false;
 let resizing = false;
 let resizeDir = null;
-let dragOffset = { x: 0, y: 0 };
+let dragOffset = { x:0, y:0 };
 
+/* Texto editable: mantiene posición y tamaño relativo */
+let textObj = {
+  value: '',
+  x: 120,
+  y: 480,
+  size: 48,
+  color: '#00e5ff',
+  baseline: 'top'
+};
+let draggingText = false;
+let resizingText = false;
+let textResizeStart = null;
+
+/* =========================
+   Helper: optimiza imágenes grandes (reduce memoria en móviles)
+   ========================= */
+function optimizeImage(img, maxSize = 2048){
+  return new Promise(resolve=>{
+    if(img.width <= maxSize && img.height <= maxSize){ resolve(img); return; }
+    const scale = maxSize / Math.max(img.width, img.height);
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+    const buf = document.createElement('canvas');
+    buf.width = w; buf.height = h;
+    const bctx = buf.getContext('2d');
+    bctx.drawImage(img,0,0,w,h);
+    const out = new Image();
+    out.onload = () => resolve(out);
+    out.src = buf.toDataURL('image/jpeg', 0.9);
+  });
+}
+
+/* =========================
+   Ajusta canvas al mockup (DPR aware)
+   ========================= */
 function setCanvasSizeToImage(img){
-  const dpr = DPR;
-  canvas.width = img.width * dpr;
-  canvas.height = img.height * dpr;
-
-  // mantener estilo responsivo (no tocamos tu diseño)
-  canvas.style.setProperty(
-    "width",
-    Math.min(img.width, window.innerWidth - 40) + "px",
-    "important"
-  );
-  canvas.style.height = "auto";
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.width = img.width * DPR;
+  canvas.height = img.height * DPR;
+  // conservar responsive CSS width (fix para móviles)
+  canvas.style.setProperty('width', Math.min(img.width, window.innerWidth - 40) + 'px', 'important');
+  canvas.style.height = 'auto';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 
-/* ============================ */
+/* =========================
+   DIBUJO PRINCIPAL
+   ========================= */
 function draw(){
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // limpiar
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  if (mockupImg)
+  // mockup / fondo
+  if(mockupImg){
     ctx.drawImage(mockupImg, 0, 0, canvas.width / DPR, canvas.height / DPR);
-  else {
+  } else {
     ctx.fillStyle = '#0b0b0b';
-    ctx.fillRect(0, 0, canvas.width / DPR, canvas.height / DPR);
+    ctx.fillRect(0,0,canvas.width / DPR, canvas.height / DPR);
   }
 
-  if (artImg) ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
+  // arte (diseño)
+  if(artImg){
+    ctx.drawImage(artImg, art.x, art.y, art.w, art.h);
+  }
 
-  if (artImg && (dragging || resizing || pointerDown)) {
-    ctx.strokeStyle = '#00ffff';
-    ctx.lineWidth = 2;
+  // borde selección del arte si está interactuando
+  if(artImg && (dragging || resizing || pointerDown)){
+    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2;
     ctx.strokeRect(art.x, art.y, art.w, art.h);
-
+    // dibujar manejadores en esquinas y lados (visuales)
+    const hs = HANDLE;
+    // esquinas
+    const corners = [
+      [art.x, art.y],
+      [art.x + art.w, art.y],
+      [art.x, art.y + art.h],
+      [art.x + art.w, art.y + art.h]
+    ];
     ctx.fillStyle = '#ff00cc';
-    ctx.fillRect(art.x + art.w - HANDLE/2, art.y + art.h - HANDLE/2, HANDLE, HANDLE);
+    corners.forEach(c => ctx.fillRect(c[0]-hs/2, c[1]-hs/2, hs, hs));
+    // lados (opcionales)
+    ctx.fillRect(art.x + art.w/2 - hs/2, art.y - hs/2, hs, hs);
+    ctx.fillRect(art.x + art.w/2 - hs/2, art.y + art.h - hs/2, hs, hs);
+    ctx.fillRect(art.x - hs/2, art.y + art.h/2 - hs/2, hs, hs);
+    ctx.fillRect(art.x + art.w - hs/2, art.y + art.h/2 - hs/2, hs, hs);
+  }
+
+  // texto
+  if(textObj.value){
+    ctx.font = `${textObj.size}px Orbitron`;
+    ctx.fillStyle = textObj.color;
+    ctx.textBaseline = textObj.baseline;
+    ctx.fillText(textObj.value, textObj.x, textObj.y);
+  }
+
+  // si se está interactuando con el texto, mostrar su caja y manejadores
+  if((draggingText || resizingText || pointerDown) && textObj.value){
+    ctx.font = `${textObj.size}px Orbitron`;
+    const tw = ctx.measureText(textObj.value).width;
+    const th = textObj.size;
+    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2;
+    ctx.strokeRect(textObj.x, textObj.y, tw, th);
+    ctx.fillStyle = '#ff00cc';
+    // manejar abajo-derecha para escalar texto
+    ctx.fillRect(textObj.x + tw - HANDLE/2, textObj.y + th - HANDLE/2, HANDLE, HANDLE);
   }
 }
 
-/* ============================ */
+/* =========================
+   COORDENADAS: cliente -> bitmap coords (DPR aware)
+   ========================= */
 function getPointerPos(e){
   const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
-  const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
+  const clientX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] && e.touches[0].clientX);
+  const clientY = (e.clientY !== undefined) ? e.clientY : (e.touches && e.touches[0] && e.touches[0].clientY);
   return {
-    x: x * (canvas.width / rect.width) / DPR,
-    y: y * (canvas.height / rect.height) / DPR
+    x: (clientX - rect.left) * (canvas.width / rect.width) / DPR,
+    y: (clientY - rect.top) * (canvas.height / rect.height) / DPR
   };
 }
 
-function isInsideArt(p){
-  return p.x >= art.x && p.x <= art.x + art.w && p.y >= art.y && p.y <= art.y + art.h;
-}
-function getResizeDirection(p){
+/* =========================
+   DETECCIÓN REDIM / HIT TEST
+   ========================= */
+function pointInRect(p, rx, ry, rw, rh){ return p.x >= rx && p.x <= rx+rw && p.y >= ry && p.y <= ry+rh; }
+
+function getArtResizeDir(p){
   const nearLeft = Math.abs(p.x - art.x) < HANDLE;
   const nearRight = Math.abs(p.x - (art.x + art.w)) < HANDLE;
   const nearTop = Math.abs(p.y - art.y) < HANDLE;
@@ -190,206 +249,291 @@ function getResizeDirection(p){
   return null;
 }
 
-canvas.addEventListener('pointerdown', e => {
+function pointOnTextHandle(p){
+  if(!textObj.value) return false;
+  ctx.font = `${textObj.size}px Orbitron`;
+  const tw = ctx.measureText(textObj.value).width;
+  const th = textObj.size;
+  // handle bottom-right
+  return pointInRect(p, textObj.x + tw - HANDLE/2, textObj.y + th - HANDLE/2, HANDLE, HANDLE);
+}
+
+function pointInText(p){
+  if(!textObj.value) return false;
+  ctx.font = `${textObj.size}px Orbitron`;
+  const tw = ctx.measureText(textObj.value).width;
+  const th = textObj.size;
+  return pointInRect(p, textObj.x, textObj.y, tw, th);
+}
+
+/* =========================
+   EVENTOS POINTER (unifica mouse/touch)
+   ========================= */
+canvas.addEventListener('pointerdown', (e)=>{
   e.preventDefault();
-  if (activePointerId && activePointerId !== e.pointerId) return;
+  // multi-pointer protection
+  if(activePointerId !== null && activePointerId !== e.pointerId) return;
   activePointerId = e.pointerId;
   canvas.setPointerCapture(activePointerId);
 
   pointerDown = true;
-  const pos = getPointerPos(e);
-  const dir = getResizeDirection(pos);
+  const p = getPointerPos(e);
 
-  if (artImg && dir){
-    resizing = true; resizeDir = dir;
-  } else if (artImg && isInsideArt(pos)){
-    dragging = true;
-    dragOffset.x = pos.x - art.x;
-    dragOffset.y = pos.y - art.y;
+  // prioridad: primero chequear si clicaron el handle de texto (para escalar)
+  if(pointOnTextHandle(p)){
+    resizingText = true;
+    textResizeStart = { px: p.x, py: p.y, size: textObj.size };
+    return;
   }
 
+  // luego chequear si clicaron dentro del texto -> arrastrar texto
+  if(pointInText(p)){
+    draggingText = true;
+    textObj.offsetX = p.x - textObj.x;
+    textObj.offsetY = p.y - textObj.y;
+    draw();
+    return;
+  }
+
+  // chequear si clicaron un handle de art (resize)
+  const artDir = getArtResizeDir(p);
+  if(artImg && artDir){
+    resizing = true;
+    resizeDir = artDir;
+    return;
+  }
+
+  // chequear si clicaron dentro del arte -> arrastrar arte
+  if(artImg && pointInRect(p, art.x, art.y, art.w, art.h)){
+    dragging = true;
+    dragOffset.x = p.x - art.x;
+    dragOffset.y = p.y - art.y;
+    draw();
+    return;
+  }
+
+  // si tocó afuera, deseleccionar (no hacemos nada especial)
   draw();
 });
 
-canvas.addEventListener('pointermove', e => {
-  const pos = getPointerPos(e);
-  const dir = getResizeDirection(pos);
-
-  if (dir) canvas.style.cursor = dir + '-resize';
-  else if (artImg && isInsideArt(pos)) canvas.style.cursor = 'move';
-  else canvas.style.cursor = 'default';
-
-  if (!pointerDown || activePointerId !== e.pointerId) return;
-
-  e.preventDefault();
-  if (dragging){
-    art.x = pos.x - dragOffset.x;
-    art.y = pos.y - dragOffset.y;
-  } else if (resizing){
-    const dx = pos.x - art.x;
-    const dy = pos.y - art.y;
-    switch (resizeDir){
-      case 'n': art.h += art.y - pos.y; art.y = pos.y; break;
-      case 's': art.h = dy; break;
-      case 'w': art.w += art.x - pos.x; art.x = pos.x; break;
-      case 'e': art.w = dx; break;
-      case 'nw': art.w += art.x - pos.x; art.h += art.y - pos.y; art.x = pos.x; art.y = pos.y; break;
-      case 'ne': art.w = dx; art.h += art.y - pos.y; art.y = pos.y; break;
-      case 'sw': art.w += art.x - pos.x; art.x = pos.x; art.h = dy; break;
-      case 'se': art.w = dx; art.h = dy; break;
-    }
-    if (art.w < MIN_SIZE) art.w = MIN_SIZE;
-    if (art.h < MIN_SIZE) art.h = MIN_SIZE;
+canvas.addEventListener('pointermove', (e)=>{
+  const p = getPointerPos(e);
+  // update cursor hints
+  if(artImg){
+    const artDir = getArtResizeDir(p);
+    if(artDir) canvas.style.cursor = artDir + '-resize';
+    else if(pointInRect(p, art.x, art.y, art.w, art.h)) canvas.style.cursor = 'move';
+    else canvas.style.cursor = 'default';
+  } else {
+    canvas.style.cursor = 'default';
   }
 
-  draw();
+  if(!pointerDown || activePointerId !== e.pointerId) return;
+  e.preventDefault();
+
+  // dragging text
+  if(draggingText){
+    textObj.x = p.x - textObj.offsetX;
+    textObj.y = p.y - textObj.offsetY;
+    draw();
+    return;
+  }
+
+  // resizing text
+  if(resizingText && textResizeStart){
+    const dx = p.x - textResizeStart.px;
+    // simple scale factor -> change size proportionally
+    const newSize = Math.max(12, Math.round(textResizeStart.size + dx * 0.2));
+    textObj.size = newSize;
+    draw();
+    return;
+  }
+
+  // dragging art
+  if(dragging){
+    art.x = p.x - dragOffset.x;
+    art.y = p.y - dragOffset.y;
+    draw();
+    return;
+  }
+
+  // resizing art
+  if(resizing){
+    const dx = p.x - art.x;
+    const dy = p.y - art.y;
+    switch(resizeDir){
+      case 'n': art.h += art.y - p.y; art.y = p.y; break;
+      case 's': art.h = dy; break;
+      case 'w': art.w += art.x - p.x; art.x = p.x; break;
+      case 'e': art.w = dx; break;
+      case 'nw': art.w += art.x - p.x; art.h += art.y - p.y; art.x = p.x; art.y = p.y; break;
+      case 'ne': art.w = dx; art.h += art.y - p.y; art.y = p.y; break;
+      case 'sw': art.w += art.x - p.x; art.x = p.x; art.h = dy; break;
+      case 'se': art.w = dx; art.h = dy; break;
+    }
+    if(art.w < MIN_SIZE) art.w = MIN_SIZE;
+    if(art.h < MIN_SIZE) art.h = MIN_SIZE;
+    draw();
+    return;
+  }
 });
 
 function endPointer(e){
-  if (activePointerId !== e.pointerId) return;
-  dragging = false;
-  resizing = false;
+  if(activePointerId !== e.pointerId) return;
+  // reset states
+  dragging = resizing = draggingText = resizingText = false;
   pointerDown = false;
   resizeDir = null;
-  try { canvas.releasePointerCapture(activePointerId); } catch(_){}
   activePointerId = null;
+  try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
   draw();
 }
-
 canvas.addEventListener('pointerup', endPointer);
 canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('pointerout', endPointer);
 
-/* =====================================================
-   🚀 FIX PARA CELULAR: usar la imagen precargada pero optimizada
-   ===================================================== */
-function loadDefaultMockup(baseName) {
-
-    // obtenemos el img precargado (ya en el DOM, evita fetchs adicionales)
-    const preloadImg = document.getElementById(
-        baseName === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos"
-    );
-
-    if (!preloadImg) {
-        alert("No existe el mockup precargado");
-        return;
+/* =========================
+   CARGA DE MOCKUPS QUEMADOS (usa precarga en DOM para evitar freeze)
+   ========================= */
+function loadDefaultMockup(baseName){
+  const preloadImg = document.getElementById(baseName === DEFAULT_ELLAS ? "pre_ellas" : "pre_ellos");
+  if(!preloadImg){ alert("No existe el mockup precargado"); return; }
+  const temp = new Image();
+  temp.crossOrigin = "anonymous";
+  temp.onload = async ()=>{
+    try{
+      const optimized = await optimizeImage(temp, 2048);
+      mockupImg = optimized;
+      setCanvasSizeToImage(mockupImg);
+      draw();
+    }catch{
+      mockupImg = temp;
+      setCanvasSizeToImage(mockupImg);
+      draw();
     }
-
-    // cargamos esa fuente en un image temporal para poder optimizar (si es grande)
-    const temp = new Image();
-    temp.crossOrigin = "anonymous";
-    temp.onload = async () => {
-        // optimizamos (redimensionamos si hace falta) antes de asignar a mockupImg
-        try {
-            const optimized = await optimizeImage(temp, 2048);
-            mockupImg = optimized;
-            setCanvasSizeToImage(mockupImg);
-            draw();
-        } catch (err) {
-            // si falla la optimización, usar la original (degradado seguro)
-            mockupImg = temp;
-            setCanvasSizeToImage(mockupImg);
-            draw();
-        }
-    };
-    temp.onerror = () => {
-        alert("No se pudo cargar el mockup");
-    };
-    temp.src = preloadImg.src;
+  };
+  temp.onerror = ()=> alert("No se pudo cargar el mockup");
+  temp.src = preloadImg.src;
 }
 
 btnEllas.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLAS));
 btnEllos.addEventListener('click', ()=> loadDefaultMockup(DEFAULT_ELLOS));
 
-/* ============================
-   Cambio también para input de mockup: optimizar antes de usar
-   ============================ */
-mockupInput.addEventListener('change', (e) => {
+/* =========================
+   SUBIR MOCKUP (input)
+   ========================= */
+mockupInput.addEventListener('change', (e)=>{
   const f = e.target.files[0];
-  if (!f) return;
+  if(!f) return;
   const url = URL.createObjectURL(f);
   const img = new Image();
-  img.onload = async () => {
-    try {
+  img.onload = async ()=>{
+    try{
       const optimized = await optimizeImage(img, 2048);
       mockupImg = optimized;
-      setCanvasSizeToImage(mockupImg);
-      draw();
-    } catch {
+    }catch{
       mockupImg = img;
+    } finally {
       setCanvasSizeToImage(mockupImg);
       draw();
-    } finally {
       URL.revokeObjectURL(url);
     }
   };
-  img.onerror = () => { alert("No se pudo cargar el mockup"); URL.revokeObjectURL(url); };
+  img.onerror = ()=> { alert("No se pudo cargar el mockup"); URL.revokeObjectURL(url); };
   img.src = url;
 });
 
-/* ============================
-   (MANTENGO ART INPUT igual — no es la fuente del freeze)
-   ============================ */
-artInput.addEventListener('change', (e) => {
+/* =========================
+   SUBIR ARTE / DISEÑO (input)
+   ========================= */
+artInput.addEventListener('change', (e)=>{
   const f = e.target.files[0];
-  if (!f) return;
+  if(!f) return;
   const url = URL.createObjectURL(f);
   const img = new Image();
-  img.onload = () => {
+  img.onload = ()=>{
     artImg = img;
+    // ajustar tamaño inicial relativo al canvas lógico
     const cw = canvas.width / DPR;
     art.w = cw * 0.4;
     art.h = art.w * (img.height / img.width);
-    art.x = (cw - art.w) / 2;
-    art.y = Math.max(60, (canvas.height/DPR)*0.25);
+    art.x = (cw - art.w)/2;
+    art.y = Math.max(60, (canvas.height / DPR) * 0.25);
     draw();
     URL.revokeObjectURL(url);
   };
-  img.onerror = () => alert("No se pudo cargar el diseño");
+  img.onerror = ()=> { alert("No se pudo cargar el diseño"); URL.revokeObjectURL(url); };
   img.src = url;
 });
 
-downloadBtn.addEventListener('click', async () => {
+/* =========================
+   TEXTO: input y color
+   ========================= */
+textInput.addEventListener('input', ()=>{
+  textObj.value = textInput.value;
   draw();
-  try {
-    await new Promise((resolve, reject) => {
-      canvas.toBlob(b=>{
-        if(!b){ reject(); return; }
-        const url=URL.createObjectURL(b);
-        const a=document.createElement('a');
-        a.href=url; a.download="camiseta_cyberpunk.png";
-        a.click();
+});
+textColor.addEventListener('input', ()=>{
+  textObj.color = textColor.value;
+  draw();
+});
+
+/* =========================
+   DESCARGA ROBUSTA
+   ========================= */
+downloadBtn.addEventListener('click', async ()=>{
+  draw();
+  try{
+    await new Promise((resolve, reject)=>{
+      canvas.toBlob((blob)=>{
+        if(!blob){ reject(new Error('no blob')); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'camiseta_cyberpunk.png';
+        document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
         resolve();
-      });
+      }, 'image/png');
     });
-  } catch {
-    try {
-      const dataUrl = canvas.toDataURL("image/png");
-      const a=document.createElement("a");
-      a.href=dataUrl; a.download="camiseta_cyberpunk.png";
-      a.click();
-    } catch {
-      alert("No se pudo descargar por CORS. Usa un servidor o GitHub Pages.");
+    return;
+  }catch(err){
+    try{
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl; a.download = 'camiseta_cyberpunk.png'; document.body.appendChild(a); a.click(); a.remove();
+      return;
+    }catch{
+      alert('No se pudo descargar (CORS o restricciones). Usa GitHub Pages o servidor local.');
     }
   }
 });
 
-resetBtn.addEventListener('click', ()=> {
+/* =========================
+   RESET
+   ========================= */
+resetBtn.addEventListener('click', ()=>{
   mockupImg = null; artImg = null;
   art = { x:100, y:150, w:300, h:300 };
-  canvas.width = 800 * DPR;
-  canvas.height = 1000 * DPR;
+  textObj = { value:'', x:120, y:480, size:48, color:'#00e5ff', baseline:'top' };
+  textInput.value = '';
+  textColor.value = '#00e5ff';
+  const dpr = DPR;
+  canvas.width = 800 * dpr;
+  canvas.height = 1000 * dpr;
   canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   draw();
 });
 
+/* =========================
+   INIT
+   ========================= */
 (function init(){
-  canvas.width = 800 * DPR;
-  canvas.height = 1000 * DPR;
+  const dpr = DPR;
+  canvas.width = 800 * dpr;
+  canvas.height = 1000 * dpr;
   canvas.style.width = Math.min(800, window.innerWidth - 40) + 'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
   draw();
 })();
 </script>
