@@ -305,6 +305,26 @@ function setCanvasSizeToImage(img){
    DIBUJADO PRINCIPAL
    - Dibuja: fondo (mockup), arte, textos (todos), y manejadores si corresponde.
 */
+
+const formatosPermitidos = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp"
+];
+
+if (!formatosPermitidos.includes(archivo.type)) {
+    alert("Formato no soportado. Usa PNG, JPG o WEBP.");
+    return;
+}
+
+
+
+
+
+
+
+     
 function draw(){
   // limpiar canvas lógico
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -847,5 +867,6 @@ resetBtn.addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
 
 
