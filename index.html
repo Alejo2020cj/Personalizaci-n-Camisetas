@@ -647,7 +647,7 @@ function loadDefaultMockup(baseName){
   temp.crossOrigin = "anonymous";
   temp.onload = async () => {
     try {
-      mockupImg = await optimizeImage(temp, 2048);
+      mockupImg = await optimizeImage(temp, 1024);
     } catch {
       mockupImg = temp;
     }
@@ -669,7 +669,7 @@ mockupInput.addEventListener('change', (e) => {
   const url = URL.createObjectURL(f);
   const img = new Image();
   img.onload = async ()=> {
-    try { mockupImg = await optimizeImage(img, 2048); }
+    try { mockupImg = await optimizeImage(img, 1024); }
     catch { mockupImg = img; }
     setCanvasSizeToImage(mockupImg);
     draw();
@@ -847,3 +847,4 @@ resetBtn.addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
