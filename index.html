@@ -271,7 +271,7 @@ let selectedTextId = null; // id del texto seleccionado (si lo hay)
  *   un nuevo Image con dataURL (JPEG para reducir peso). Mantiene aspecto.
  * - Esto ayuda a evitar OOM / congelamiento en móviles con fotos enormes.
  */
-function optimizeImage(img, maxSize = 2048){
+function optimizeImage(img, maxSize = 1024){
   return new Promise(resolve=>{
     if(img.width <= maxSize && img.height <= maxSize){ resolve(img); return; }
     const scale = maxSize / Math.max(img.width, img.height);
@@ -847,4 +847,5 @@ resetBtn.addEventListener('click', ()=>{
 </script>
 </body>
 </html>
+
 
